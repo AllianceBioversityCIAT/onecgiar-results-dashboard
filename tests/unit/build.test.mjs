@@ -256,6 +256,19 @@ test('assertSafeOutDir refuses roots, the repo root, ancestors, src/, .git/ and 
   for (const dir of good) assert.doesNotThrow(() => assertSafeOutDir(dir, ROOT), dir);
 });
 
+test('assertSafeOutDir protects a repository that lives inside the temp directory', () => {
+  const fakeTmp = path.join(path.parse(ROOT).root, 'fake-tmp');
+  const repo = path.join(fakeTmp, 'clone', 'results-dashboard-static');
+  for (const dir of [repo, path.join(repo, 'src'), path.join(repo, 'src', 'public'), path.join(repo, '.git'), path.join(repo, '.git', 'objects'),
+    path.join(repo, 'reference'), path.join(repo, 'node_modules'), path.join(repo, 'scripts'), path.join(repo, 'tests'),
+    path.dirname(repo), fakeTmp, fakeTmp + path.sep, path.parse(repo).root]) {
+    assert.throws(() => assertSafeOutDir(dir, repo, fakeTmp), (e) => e instanceof BuildError && /refusing to use/.test(e.message), dir);
+  }
+  for (const dir of [path.join(repo, 'dist'), path.join(repo, 'dist', 'x'), path.join(fakeTmp, 'rd-build-abc'), path.join(fakeTmp, 'rd-build-abc', 'dist')]) {
+    assert.doesNotThrow(() => assertSafeOutDir(dir, repo, fakeTmp), dir);
+  }
+});
+
 test('validateSite rejects a missing key and accepts the shipped data', () => {
   assert.doesNotThrow(() => validateSite(structuredClone(site)));
   const broken = structuredClone(site);

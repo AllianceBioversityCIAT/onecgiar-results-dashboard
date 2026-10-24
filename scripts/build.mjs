@@ -140,19 +140,23 @@ export function normalizePath(p) {
   return process.platform === 'win32' ? x.toLowerCase() : x;
 }
 
-// The clean step deletes the output folder recursively, so only two places are allowed:
-// (a) the repository's dist/ folder or a folder inside it, and (b) a folder strictly inside the
-// system temp directory (never the temp directory itself). Everything else is refused, which
-// covers filesystem roots, the repository root and its ancestors, src/, reference/, .git/, etc.
+// The clean step deletes the output folder recursively. Refusals are evaluated first, then the
+// allowlist (so a repository that itself lives inside the temp directory stays protected):
+//   refused: any filesystem root, the repository root, every ancestor of it, and src/, reference/,
+//            node_modules/, scripts/, tests/, .git/ with anything inside them;
+//   allowed: <repo>/dist or a folder inside it, or a folder strictly inside the system temp
+//            directory (not the temp directory itself, and not a refused path).
 export function assertSafeOutDir(out, repoRoot, tmpRoot = os.tmpdir()) {
   const o = normalizePath(out);
+  const root = normalizePath(repoRoot);
   const within = (child, parentDir) => child === parentDir || child.startsWith(parentDir + path.sep);
+  const protectedDirs = ['src', 'reference', 'node_modules', 'scripts', 'tests', '.git'].map((d) => normalizePath(path.join(repoRoot, d)));
+  const refused = path.parse(o).root === o || within(root, o) || protectedDirs.some((d) => within(o, d));
   const dist = normalizePath(path.join(repoRoot, 'dist'));
   const tmp = normalizePath(tmpRoot);
-  const isRoot = path.parse(o).root === o;
-  const allowed = !isRoot && (within(o, dist) || (o !== tmp && within(o, tmp)));
+  const allowed = !refused && (within(o, dist) || (o !== tmp && within(o, tmp)));
   if (!allowed) {
-    throw new BuildError(1, 'clean', [`refusing to use ${out} as the output folder: only <repo>/dist (or a folder inside it) and a folder strictly inside the system temp directory are allowed (the build deletes its output folder)`]);
+    throw new BuildError(1, 'clean', [`refusing to use ${out} as the output folder: only <repo>/dist (or a folder inside it) and a folder strictly inside the system temp directory are allowed, never a filesystem root, the repository root or an ancestor, or src/, reference/, node_modules/, scripts/, tests/, .git/ (the build deletes its output folder)`]);
   }
 }
 
