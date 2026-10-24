@@ -1,0 +1,357 @@
+// npm run build (design.md 7.1, steps 1-9 and 11; step 10 `build-edge.mjs` belongs to T-09).
+// Pure static output: no PHP, no timestamps or absolute paths inside the output (FR-02, FR-29).
+//
+// Environment: BUILD_OUT_DIR (output folder, default <repo>/dist; its dist-edge/ and artifacts/
+// siblings live next to it), BUILD_TIME_BUDGET_MS, BUILD_IDLE_ATTESTED (recorded in the history).
+// BUILD_SRC_DIR is a test seam: a folder with the layout of src/ (templates/, data/, public/,
+// runtime/). It exists so the red-run test can build a deliberately broken copy; it is not a
+// user-facing option.
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRenderer } from './twig-config.mjs';
+import { loadCore } from './load-core.mjs';
+import { loadSite, validateSite, routableSections, rdData, REPO_ROOT, SiteDataError } from './site-data.mjs';
+import { checkRefGraph } from './refgraph.mjs';
+import { checkTableauViews } from './tableau-check.mjs';
+import { runHygiene } from './hygiene.mjs';
+import { computeManifest, writeManifest, listFiles } from './manifest.mjs';
+
+export class BuildError extends Error {
+  constructor(step, title, details) {
+    super(`step ${step} (${title}): ${details[0]}`);
+    this.name = 'BuildError';
+    this.step = step;
+    this.title = title;
+    this.details = details;
+  }
+}
+
+// Pinned npm packages self-hosted under third-party/ (DD-10, design 4.1). Font Awesome's CDN
+// css/all.css is byte-identical to npm css/all.min.css (T-04, P-10), hence the file-name mapping.
+const VENDOR_FILES = [
+  ['bootstrap/dist/css/bootstrap.min.css', 'third-party/bootstrap/css/bootstrap.min.css'],
+  ['@fortawesome/fontawesome-free/css/all.min.css', 'third-party/fontawesome/css/all.css'],
+  ['animate.css/animate.min.css', 'third-party/animate/animate.min.css'],
+  ['jquery-csv/src/jquery.csv.min.js', 'third-party/jquery-csv/jquery.csv.min.js'],
+];
+const VENDOR_DIRS = [
+  ['@fortawesome/fontawesome-free/webfonts', 'third-party/fontawesome/webfonts'],
+];
+const RUNTIME_FILES = ['rd-params.js', 'rd-apply.js'];
+
+const VARIANTS = [
+  { suffix: '', embed: false, displayNav: true },
+  { suffix: '--embed', embed: true, displayNav: true },
+  { suffix: '--embed-nonav', embed: true, displayNav: false },
+];
+
+const toLf = (s) => s.replace(/\r\n?/g, '\n');
+const posix = (p) => p.split(path.sep).join('/');
+
+function writeOut(outDir, rel, data) {
+  const abs = path.join(outDir, ...rel.split('/'));
+  fs.mkdirSync(path.dirname(abs), { recursive: true });
+  fs.writeFileSync(abs, data);
+}
+
+function copyOut(outDir, rel, srcFile) {
+  if (!fs.existsSync(srcFile)) throw new BuildError(6, 'copy assets', [`missing source file: ${srcFile}`]);
+  const abs = path.join(outDir, ...rel.split('/'));
+  fs.mkdirSync(path.dirname(abs), { recursive: true });
+  fs.copyFileSync(srcFile, abs);
+}
+
+function walkSorted(dir) {
+  const out = [];
+  const walk = (abs, rel) => {
+    const entries = fs.readdirSync(abs, { withFileTypes: true }).sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+    for (const e of entries) {
+      const r = rel === '' ? e.name : `${rel}/${e.name}`;
+      if (e.isDirectory()) walk(path.join(abs, e.name), r);
+      else out.push(r);
+    }
+  };
+  walk(dir, '');
+  return out;
+}
+
+function isExcluded(rel, excludeAssets) {
+  return excludeAssets.some((e) => (e.endsWith('/') ? rel.startsWith(e) : rel === e));
+}
+
+// Step 4: replace CDN bases by their self-hosted path, keeping the ?query/#fragment suffix.
+// Throws (via the returned list) for absolute URLs on a self-hosted domain that stay unmapped.
+export function mapCdns(html, cdnMap, file, problems) {
+  const hosts = new Set(Object.keys(cdnMap).map((u) => new URL(u).host));
+  return html.replace(/\b((?:xlink:)?(?:src|href))(\s*=\s*)(["'])([^"']*)\3/g, (all, attr, eq, q, value) => {
+    const v = value.trim();
+    if (!/^https?:\/\//i.test(v)) return all;
+    const cut = v.search(/[?#]/);
+    const base = cut === -1 ? v : v.slice(0, cut);
+    const suffix = cut === -1 ? '' : v.slice(cut);
+    if (Object.prototype.hasOwnProperty.call(cdnMap, base)) return `${attr}${eq}${q}${cdnMap[base]}${suffix}${q}`;
+    let host = '';
+    try { host = new URL(v).host; } catch { host = ''; }
+    if (hosts.has(host)) problems.push(`${file}: URL of a self-hosted domain is not in cdnMap: ${v}`);
+    return all;
+  });
+}
+
+// The IIFE wrapper of legacy-compat.core.js (design 7.7): one namespace object
+// window.RDLegacyCompat. rd-params.js and rd-apply.js are classic scripts that call the core
+// functions by bare name (as the core is plain declarations), so the wrapper also exposes the
+// same functions as globals of the page.
+export function wrapLegacyCompat(coreSource) {
+  const names = [...coreSource.matchAll(/^function\s+([A-Za-z_$][\w$]*)/gm)].map((m) => m[1]);
+  const body = toLf(coreSource).trimEnd();
+  return [
+    '// Generated by scripts/build.mjs from src/runtime/legacy-compat.core.js. Do not edit.',
+    '(function (global) {',
+    body,
+    `var RDLegacyCompat = { ${names.map((n) => `${n}: ${n}`).join(', ')} };`,
+    'global.RDLegacyCompat = RDLegacyCompat;',
+    `${names.map((n) => `global.${n} = ${n};`).join('\n')}`,
+    '})(typeof window !== \'undefined\' ? window : this);',
+    '',
+  ].join('\n');
+}
+
+export function formatFailure(err) {
+  if (err instanceof BuildError) {
+    return [`BUILD FAILED at step ${err.step} (${err.title}):`, ...err.details.map((d) => `  ${d}`)].join('\n');
+  }
+  if (err instanceof SiteDataError) {
+    return ['BUILD FAILED at step 2 (load data):', ...err.details.map((d) => `  ${d}`)].join('\n');
+  }
+  return `BUILD FAILED: ${err && err.stack ? err.stack : err}`;
+}
+
+// Canonical form for comparisons: no \\?\ long-path prefix, resolved, no trailing separator
+// (except for a filesystem root), lower case on Windows.
+export function normalizePath(p) {
+  let x = String(p);
+  if (process.platform === 'win32') x = x.replace(/^\\\\\?\\(?!UNC\\)/, '');
+  x = path.resolve(x);
+  const root = path.parse(x).root;
+  while (x.length > root.length && (x.endsWith('\\') || x.endsWith('/'))) x = x.slice(0, -1);
+  return process.platform === 'win32' ? x.toLowerCase() : x;
+}
+
+// The clean step deletes the output folder recursively, so only two places are allowed:
+// (a) the repository's dist/ folder or a folder inside it, and (b) a folder strictly inside the
+// system temp directory (never the temp directory itself). Everything else is refused, which
+// covers filesystem roots, the repository root and its ancestors, src/, reference/, .git/, etc.
+export function assertSafeOutDir(out, repoRoot, tmpRoot = os.tmpdir()) {
+  const o = normalizePath(out);
+  const within = (child, parentDir) => child === parentDir || child.startsWith(parentDir + path.sep);
+  const dist = normalizePath(path.join(repoRoot, 'dist'));
+  const tmp = normalizePath(tmpRoot);
+  const isRoot = path.parse(o).root === o;
+  const allowed = !isRoot && (within(o, dist) || (o !== tmp && within(o, tmp)));
+  if (!allowed) {
+    throw new BuildError(1, 'clean', [`refusing to use ${out} as the output folder: only <repo>/dist (or a folder inside it) and a folder strictly inside the system temp directory are allowed (the build deletes its output folder)`]);
+  }
+}
+
+export function build({ srcDir, outDir, repoRoot = REPO_ROOT, log = () => {} } = {}) {
+  const started = process.hrtime.bigint();
+  const src = srcDir ? path.resolve(srcDir) : path.join(repoRoot, 'src');
+  const out = path.resolve(outDir || path.join(repoRoot, 'dist'));
+  const parent = path.dirname(out);
+  const edgeDir = path.join(parent, 'dist-edge');
+  const artifactsDir = path.join(parent, 'artifacts');
+  const stepMs = {};
+  const timed = (name, fn) => {
+    const t = process.hrtime.bigint();
+    const r = fn();
+    stepMs[name] = Number((process.hrtime.bigint() - t) / 1000000n);
+    return r;
+  };
+
+  assertSafeOutDir(out, repoRoot);
+
+  // 1. Clean
+  timed('clean', () => {
+    fs.rmSync(out, { recursive: true, force: true });
+    fs.rmSync(edgeDir, { recursive: true, force: true });
+    fs.rmSync(path.join(artifactsDir, 'dist-manifest.json'), { force: true });
+    fs.rmSync(path.join(artifactsDir, 'build-stats.json'), { force: true });
+    fs.mkdirSync(out, { recursive: true });
+  });
+
+  // 2. Load data
+  const site = timed('load', () => validateSite(loadSite(path.join(src, 'data', 'site.json'))));
+  const sections = routableSections(site);
+  const templatesRoot = path.join(src, 'templates');
+  const renderer = createRenderer({ templatesRoot });
+  const sources = new Map(); // output file -> entry template (for error messages)
+
+  // 3 + 4. Render variants and map CDNs
+  const cdnProblems = [];
+  timed('render', () => {
+    const part = site.variants.partnerships;
+    const pages = [];
+    for (const s of sections) {
+      if (s === 'partnerships') {
+        pages.push({ base: 'partnerships', template: part.template, section: s });
+        pages.push({ base: 'partnerships-2017', template: part.legacyTemplate, section: s });
+      } else {
+        pages.push({ base: s, template: `${s}.twig`, section: s });
+      }
+    }
+    for (const page of pages) {
+      if (!fs.existsSync(path.join(templatesRoot, page.template))) {
+        throw new BuildError(3, 'render variants', [`missing template ${page.template} (needed for ${page.base}.html)`]);
+      }
+      for (const v of VARIANTS) {
+        const file = `${page.base}${v.suffix}.html`;
+        const context = {
+          sections: site.sections,
+          crps: site.crps,
+          years: site.years,
+          chartsInfo: site.chartsInfo,
+          messagesArray: site.messages,
+          dataUrl: site.dataUrl,
+          currentSection: page.section,
+          entitySelected: site.defaults.entity,
+          yearSelected: site.defaults.year,
+          forceRefresh: page.section === 'partnerships',
+          embed: v.embed,
+          displayNav: v.displayNav,
+          hostOrigin: site.sentinel,
+          appConfig: site.appConfig,
+          queryParams: v.embed ? `embed=true&hostOrigin=${site.sentinel}&displayNav=${v.displayNav ? 'true' : 'false'}` : '',
+          glossarySection: page.section === 'glossary',
+        };
+        let html;
+        try {
+          html = renderer.render(page.template, context);
+        } catch (e) {
+          throw new BuildError(3, 'render variants', [`template ${page.template} (${file}): ${e && e.message ? e.message : e}`]);
+        }
+        writeOut(out, file, mapCdns(toLf(html), site.cdnMap, file, cdnProblems));
+        sources.set(file, page.template);
+      }
+    }
+  });
+
+  // 5. Widget and 404
+  timed('widget404', () => {
+    const active = site.sections.filter((s) => s.active).map((s) => s.action);
+    for (const [tpl, file, ctx] of [['widget.twig', 'widget/main.js', { sectionsJson: JSON.stringify(active) }], ['404.twig', '404.html', {}]]) {
+      if (!fs.existsSync(path.join(templatesRoot, tpl))) throw new BuildError(5, 'widget and 404', [`missing template ${tpl}`]);
+      let text;
+      try {
+        text = renderer.render(tpl, ctx);
+      } catch (e) {
+        throw new BuildError(5, 'widget and 404', [`template ${tpl}: ${e && e.message ? e.message : e}`]);
+      }
+      writeOut(out, file, file.endsWith('.html') ? mapCdns(toLf(text), site.cdnMap, file, cdnProblems) : toLf(text));
+      sources.set(file, tpl);
+    }
+  });
+  if (cdnProblems.length > 0) throw new BuildError(4, 'map CDNs', cdnProblems);
+
+  // 6. Copy assets
+  timed('assets', () => {
+    const publicDir = path.join(src, 'public');
+    if (!fs.existsSync(publicDir)) throw new BuildError(6, 'copy assets', [`missing source folder: ${publicDir}`]);
+    for (const rel of walkSorted(publicDir)) {
+      if (!isExcluded(rel, site.excludeAssets)) copyOut(out, rel, path.join(publicDir, ...rel.split('/')));
+    }
+    const nm = path.join(repoRoot, 'node_modules');
+    for (const [from, to] of VENDOR_FILES) copyOut(out, to, path.join(nm, ...from.split('/')));
+    for (const [from, to] of VENDOR_DIRS) {
+      const dir = path.join(nm, ...from.split('/'));
+      if (!fs.existsSync(dir)) throw new BuildError(6, 'copy assets', [`missing source folder: ${dir}`]);
+      for (const rel of walkSorted(dir)) copyOut(out, `${to}/${rel}`, path.join(dir, ...rel.split('/')));
+    }
+    const vendored = new Set(VENDOR_FILES.map(([, to]) => `./${to}`));
+    for (const [cdn, local] of Object.entries(site.cdnMap)) {
+      if (!vendored.has(local)) throw new BuildError(6, 'copy assets', [`cdnMap target ${local} (for ${cdn}) has no vendored source`]);
+    }
+    for (const f of RUNTIME_FILES) copyOut(out, `js/${f}`, path.join(src, 'runtime', f));
+    const corePath = path.join(src, 'runtime', 'legacy-compat.core.js');
+    if (!fs.existsSync(corePath)) throw new BuildError(6, 'copy assets', [`missing source file: ${corePath}`]);
+    writeOut(out, 'js/legacy-compat.js', wrapLegacyCompat(fs.readFileSync(corePath, 'utf8')));
+  });
+
+  // 7. Reference graph
+  timed('refgraph', () => {
+    const core = loadCore({ RD_DATA: rdData(site), URLSearchParams },
+      path.join(src, 'runtime', 'legacy-compat.core.js'), path.join(src, 'routing', 'rules.core.js'));
+    const resolve = (req, mode) => JSON.parse(JSON.stringify(core.resolve(req, mode)));
+    const findings = checkRefGraph({ outDir: out, site, resolve, lastValue: core.lastValue });
+    if (findings.length > 0) {
+      const twigFiles = walkSorted(templatesRoot).filter((f) => f.endsWith('.twig'));
+      const mentions = (resource) => {
+        const needle = resource.split(/[?#]/)[0];
+        return twigFiles.filter((f) => fs.readFileSync(path.join(templatesRoot, ...f.split('/')), 'utf8').includes(needle));
+      };
+      const lines = findings.map((f) => {
+        const tpl = sources.get(f.file);
+        const where = tpl ? `${f.file} (template ${tpl})` : f.file;
+        const m = f.kind === 'runtimeAssets' ? [] : mentions(f.resource);
+        return `${where}: ${f.kind} ${f.resource} -> ${f.reason}${m.length ? `; text found in template(s): ${m.join(', ')}` : ''}`;
+      });
+      throw new BuildError(7, 'reference graph', [`${findings.length} broken or excluded reference(s)`, ...lines]);
+    }
+  });
+
+  // 8. Tableau views
+  timed('tableau', () => {
+    const diffs = checkTableauViews({ outDir: out, site });
+    if (diffs.length > 0) throw new BuildError(8, 'validate Tableau', diffs);
+  });
+
+  // 9. Hygiene
+  timed('hygiene', () => {
+    const findings = runHygiene({ outDir: out, sentinel: site.sentinel });
+    if (findings.length > 0) {
+      throw new BuildError(9, 'hygiene', [`${findings.length} finding(s)`, ...findings.map((f) => `${f.file}: ${f.rule} (${f.detail})`)]);
+    }
+  });
+
+  // 11. Manifest and stats
+  const manifest = timed('manifest', () => computeManifest(out));
+  writeManifest(manifest, path.join(artifactsDir, 'dist-manifest.json'));
+  const htmlCount = listFiles(out).filter((f) => f.endsWith('.html')).length;
+  const elapsedMs = Number((process.hrtime.bigint() - started) / 1000000n);
+  const budgetMs = Number(process.env.BUILD_TIME_BUDGET_MS || site.buildTimeBudgetMs);
+  const stats = { elapsedMs, budgetMs, steps: stepMs, files: manifest.fileCount, html: htmlCount, manifestHash: manifest.hash };
+  fs.writeFileSync(path.join(artifactsDir, 'build-stats.json'), `${JSON.stringify(stats, null, 2)}\n`);
+  fs.appendFileSync(path.join(artifactsDir, 'build-history.jsonl'), `${JSON.stringify({
+    timestamp: new Date().toISOString(),
+    elapsedMs,
+    budgetMs,
+    clean: true,
+    idle: process.env.BUILD_IDLE_ATTESTED === '1',
+    outDir: out,
+    node: process.version,
+    os: `${os.platform()} ${os.release()} ${os.arch()}`,
+    files: manifest.fileCount,
+    html: htmlCount,
+    manifestHash: manifest.hash,
+  })}\n`);
+  log(`built ${manifest.fileCount} files (${htmlCount} HTML) in ${elapsedMs} ms`);
+  return { out, manifest, htmlCount, elapsedMs, budgetMs, artifactsDir };
+}
+
+const isMain = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+if (isMain) {
+  try {
+    const r = build({
+      srcDir: process.env.BUILD_SRC_DIR || undefined,
+      outDir: process.env.BUILD_OUT_DIR ? path.resolve(process.env.BUILD_OUT_DIR) : undefined,
+    });
+    console.log(`Build OK: ${posix(path.relative(process.cwd(), r.out)) || '.'}`);
+    console.log(`  files: ${r.manifest.fileCount}  html: ${r.htmlCount}`);
+    console.log(`  manifest sha256: ${r.manifest.hash}`);
+    console.log(`  elapsed: ${r.elapsedMs} ms (budget ${r.budgetMs} ms)`);
+  } catch (e) {
+    console.error(formatFailure(e));
+    process.exit(1);
+  }
+}

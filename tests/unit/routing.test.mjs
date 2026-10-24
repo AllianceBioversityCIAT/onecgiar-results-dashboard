@@ -2,16 +2,18 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { loadCore } from '../../scripts/load-core.mjs';
+import { rdData } from '../../scripts/site-data.mjs';
 
 const readJson = (rel) => JSON.parse(fs.readFileSync(new URL(rel, import.meta.url), 'utf8'));
 const site = readJson('../../src/data/site.json');
 const golden = readJson('../golden/legacy-compare.json');
 const { cases } = readJson('../cases/routing-cases.json');
 
-// Sections are the distinct actions of non-title menu rows (17 of them, design 7.3 rule 5).
-const sections = [...new Set(site.sections.filter((s) => s.type !== 'title').map((s) => s.action))];
+// Same derivation as the build and the adapters (scripts/site-data.mjs).
+const RD_DATA = rdData(site);
+const sections = RD_DATA.sections;
 const core = loadCore(
-  { RD_DATA: { sections, legacyRedirects: site.legacyRedirects } },
+  { RD_DATA },
   'src/runtime/legacy-compat.core.js',
   'src/routing/rules.core.js'
 );
