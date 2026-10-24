@@ -285,7 +285,7 @@ export function build({ srcDir, outDir, repoRoot = REPO_ROOT, log = () => {} } =
 
   // 7. Reference graph
   timed('refgraph', () => {
-    const core = loadCore({ RD_DATA: rdData(site), URLSearchParams },
+    const core = loadCore({ RD_DATA: rdData(site), RD_CANONICAL_HOST: '', URLSearchParams },
       path.join(src, 'runtime', 'legacy-compat.core.js'), path.join(src, 'routing', 'rules.core.js'));
     const resolve = (req, mode) => JSON.parse(JSON.stringify(core.resolve(req, mode)));
     const findings = checkRefGraph({ outDir: out, site, resolve, lastValue: core.lastValue });

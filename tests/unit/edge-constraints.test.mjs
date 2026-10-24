@@ -8,6 +8,7 @@ import vm from 'node:vm';
 import { runBuild, cleanupTemp, tempDir, ROOT } from '../helpers/build-run.mjs';
 import { checkEdgeSource, assembleEdge, extractEdgeFunctions, EDGE_MAX_BYTES } from '../../scripts/build-edge.mjs';
 import { rdData } from '../../scripts/site-data.mjs';
+import { HOSTS, PROD, LONGEST_HOST, PLACEHOLDER, label, defaultHost, substituteHost } from '../helpers/canonical-hosts.mjs';
 
 const site = JSON.parse(fs.readFileSync(path.join(ROOT, 'src', 'data', 'site.json'), 'utf8'));
 const legacySource = fs.readFileSync(path.join(ROOT, 'src', 'runtime', 'legacy-compat.core.js'), 'utf8');
@@ -31,6 +32,29 @@ test('NFR-07: dist-edge/cloudfront-function.js is at most 10 000 bytes', () => {
 
 test('NFR-07: the generated file passes the construct check', () => {
   assert.deepEqual(checkEdgeSource(edgeText), []);
+});
+
+// ---- FR-06 / NFR-04: optional canonical host (design 7.2) ----
+test('FR-06: the placeholder is kept once, as the declaration before the core, and the core never names a host', () => {
+  assert.equal(edgeText.split(PLACEHOLDER).length - 1, 1);
+  const decl = `var RD_CANONICAL_HOST = '${PLACEHOLDER}';`;
+  assert.ok(edgeText.indexOf(decl) !== -1 && edgeText.indexOf(decl) < edgeText.indexOf('function resolve('));
+  assert.ok(!/cgiar.org/.test(rulesSource), 'rules.core.js must not hard-code an institutional host');
+  assert.ok(!/cgiar.org/.test(edgeText), 'the edge source must not hard-code an institutional host');
+});
+
+test('FR-06 Fn::Sub safety: the edge source has no dollar-brace sequence other than the placeholder', () => {
+  assert.equal(edgeText.split(PLACEHOLDER).join('').includes('${'), false);
+  const second = '$' + '{Other}';
+  assert.ok(checkEdgeSource(edgeText + '\nvar x = "' + second + '";\n').some((x) => /Fn::Sub-unsafe/.test(x)), 'a second dollar-brace is a finding');
+});
+
+test('NFR-04: the substituted code for the longest host stays within 10 000 bytes and passes the construct check', () => {
+  const substituted = substituteHost(edgeText, LONGEST_HOST);
+  const bytes = Buffer.byteLength(substituted, 'utf8');
+  console.log(`# edge size: raw (placeholder) ${Buffer.byteLength(edgeText, 'utf8')} bytes; substituted for ${LONGEST_HOST} ${bytes} bytes; limit ${EDGE_MAX_BYTES}`);
+  assert.ok(bytes <= EDGE_MAX_BYTES, `${bytes} bytes`);
+  assert.deepEqual(checkEdgeSource(substituted), []);
 });
 
 test('the edge file is dist-edge/ next to the output folder, not inside dist/', () => {
@@ -62,11 +86,21 @@ test('DD-20: the edge file runs in an empty sandbox (no require, process, fs, UR
   }
   const declared = [...edgeText.matchAll(/^function\s+([A-Za-z_$][\w$]*)/gm)].map((m) => m[1]);
   for (const n of declared) assert.ok(n === 'isNumericYear' || n === 'yearAfter2017' || n === 'resolve' || n === 'handler' || /^(rules|rd)[A-Z]/.test(n), n);
-  const res = vm.runInContext(
-    `JSON.stringify(handler({ request: { method: 'GET', uri: '/innovations', querystring: {}, headers: { host: { value: 'results.cgiar.org' } } } }))`,
-    sandbox);
-  assert.equal(JSON.parse(res).uri, '/innovations.html');
 });
+
+for (const H of HOSTS) {
+  test(`DD-20 / FR-06: the substituted edge file runs in an empty sandbox and routes the canonical host normally {canonical host ${label(H)}}`, () => {
+    const sandbox = vm.createContext({});
+    vm.runInContext(`"use strict";\n${substituteHost(edgeText, H)}`, sandbox, { filename: 'cloudfront-function.js' });
+    const call = (host) => JSON.parse(vm.runInContext(
+      `JSON.stringify(handler({ request: { method: 'GET', uri: '/innovations', querystring: {}, headers: { host: { value: ${JSON.stringify(host)} } } } }))`,
+      sandbox));
+    assert.equal(call(defaultHost(H)).uri, '/innovations.html');
+    const foreign = call('dxxxx.cloudfront.net');
+    if (H === '') assert.equal(foreign.uri, '/innovations.html');
+    else assert.equal(foreign.headers.location.value, `https://${H}/innovations`);
+  });
+}
 
 test('no ES6+ syntax that the cores promise to avoid: no import/export statements and no top-level await', () => {
   assert.ok(!/^\s*(import|export)\s/m.test(edgeText));
@@ -126,7 +160,7 @@ test('assembleEdge strips only whole-line comments and blank lines, keeping beha
   assert.deepEqual(checkEdgeSource(stripped), []);
   const probe = (text) => {
     const ctx = vm.createContext({});
-    vm.runInContext(text, ctx);
+    vm.runInContext(substituteHost(text, PROD), ctx);
     return vm.runInContext(`JSON.stringify([resolve({method:'GET',host:'results.cgiar.org',path:'/partnerships',query:'year=2017',params:{year:'2017'}},'edge'), resolve({method:'GET',host:'x.org',path:'/homeV1/',query:'a=b c',params:{}},'edge')])`, ctx);
   };
   assert.equal(probe(stripped), probe(full));

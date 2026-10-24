@@ -124,6 +124,7 @@ export function checkRefGraph({ outDir, site, resolve, lastValue }) {
     const params = {};
     const sp = new URLSearchParams(search);
     for (const k of new Set(sp.keys())) params[k] = lastValue(sp, k);
+    // 'local' mode: rule 1 is off, the host is irrelevant. The caller's core defines RD_CANONICAL_HOST ('').
     const result = resolve({ method: 'GET', host: 'results.cgiar.org', path: pathname, query: search, params }, 'local');
     const kind = '<a href>';
     if (result.type === 'notFound' || result.type === 'badRequest' || result.type === 'methodNotAllowed') {

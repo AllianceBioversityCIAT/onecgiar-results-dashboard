@@ -286,7 +286,7 @@ test('an unmapped URL on a self-hosted CDN domain is an error (step 4)', () => {
 
 // ---- reference graph on synthetic outputs ---------------------------------------------------
 
-const core = loadCore({ RD_DATA: rdData(site), URLSearchParams }, 'src/runtime/legacy-compat.core.js', 'src/routing/rules.core.js');
+const core = loadCore({ RD_DATA: rdData(site), RD_CANONICAL_HOST: '', URLSearchParams }, 'src/runtime/legacy-compat.core.js', 'src/routing/rules.core.js');
 const resolve = (req, mode) => JSON.parse(JSON.stringify(core.resolve(req, mode)));
 function graph(files, over = {}) {
   const dir = tempDir('rd-graph-');

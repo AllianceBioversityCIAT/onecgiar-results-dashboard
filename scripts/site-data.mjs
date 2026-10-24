@@ -26,7 +26,8 @@ export function routableSections(site) {
   return [...new Set(site.sections.filter((s) => s.type !== 'title').map((s) => s.action))];
 }
 
-// The RD_DATA global that rules.core.js reads (loadCore first argument).
+// The RD_DATA global that rules.core.js reads (loadCore first argument). rules.core.js also reads the
+// RD_CANONICAL_HOST global (FR-06); it is not site data, so each loader defines it next to RD_DATA.
 export function rdData(site) {
   return { sections: routableSections(site), legacyRedirects: site.legacyRedirects };
 }

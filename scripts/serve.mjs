@@ -80,9 +80,10 @@ function hostOf(header) {
   return c === -1 ? h : h.slice(0, c);
 }
 
+// RD_CANONICAL_HOST is '' here: the local server never runs rule 1 (mode 'local') and has no canonical host.
 function loadRules() {
   const RD_DATA = rdData(loadSite());
-  return loadCore({ RD_DATA }, 'src/runtime/legacy-compat.core.js', 'src/routing/rules.core.js');
+  return loadCore({ RD_DATA, RD_CANONICAL_HOST: '' }, 'src/runtime/legacy-compat.core.js', 'src/routing/rules.core.js');
 }
 
 // Returns { handler, index }. `rules: false` is the plain static server (--no-rules).

@@ -2,6 +2,8 @@
 // cloudfront-js-2.0-compatible syntax (ES5 constructs only). Pure: the same request and mode
 // always give the same result. Data comes from the global RD_DATA, injected at load time:
 //   RD_DATA = { sections: [17 section names], legacyRedirects: { name: '/target' } }
+// and the global RD_CANONICAL_HOST (string): rule 1 redirects other hosts to it in 'edge' mode; the empty
+// string disables rule 1. Every loader defines it; the generated edge source declares it before this file.
 // The year logic is reused from legacy-compat.core.js (yearAfter2017).
 //
 // resolve(request, mode)
@@ -154,8 +156,8 @@ function resolve(request, mode) {
   var query = typeof request.query === 'string' ? request.query : '';
   if (rulesBadPath(path)) { return { type: 'badRequest', status: 400 }; }
   if (rulesTraversal(path)) { return { type: 'notFound', status: 404 }; }
-  if (mode === 'edge' && request.host !== 'results.cgiar.org') {
-    return rulesRedirect('https://results.cgiar.org' + rulesTerminalTarget(path, query));
+  if (mode === 'edge' && RD_CANONICAL_HOST !== '' && request.host !== RD_CANONICAL_HOST) {
+    return rulesRedirect('https://' + RD_CANONICAL_HOST + rulesTerminalTarget(path, query));
   }
   if (request.method !== 'GET' && request.method !== 'HEAD') {
     return { type: 'methodNotAllowed', status: 405 };
