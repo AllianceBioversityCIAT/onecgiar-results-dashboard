@@ -1,0 +1,80 @@
+{
+  "$comment": "Tag contract and exception table (design 5.2, 5.3, P-19b). Read by scripts/audit-infra.mjs. CFN = https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/ . Per-type tag support comes from premise P-19b (the CFN reference page of each type); the page URLs below follow the reference's aws-resource-<service>-<type>.html naming and were not fetched by this task. Every reference URL below is UNVERIFIED (see each referenceStatus); the Environment tag must be a Ref to the Environment parameter, whose AllowedValues must equal requiredTags.Environment.values (one template serves both stacks, FR-01).",
+  "requiredTags": {
+    "Project": {
+      "value": "results-dashboard"
+    },
+    "Environment": {
+      "values": [
+        "test",
+        "prod"
+      ],
+      "parameterRef": "Environment"
+    }
+  },
+  "taggableTypes": {
+    "AWS::S3::Bucket": {
+      "property": "Tags",
+      "reference": "aws-resource-s3-bucket.html",
+      "referenceStatus": "UNVERIFIED — confirm at source before relying on it (URL not fetched by T-04)"
+    },
+    "AWS::CloudFront::Distribution": {
+      "property": "Tags",
+      "reference": "aws-resource-cloudfront-distribution.html",
+      "referenceStatus": "UNVERIFIED — confirm at source before relying on it (URL not fetched by T-04)"
+    },
+    "AWS::CloudFront::Function": {
+      "property": "Tags",
+      "reference": "aws-resource-cloudfront-function.html",
+      "referenceStatus": "UNVERIFIED — confirm at source before relying on it (URL not fetched by T-04)"
+    },
+    "AWS::IAM::Role": {
+      "property": "Tags",
+      "reference": "aws-resource-iam-role.html",
+      "referenceStatus": "UNVERIFIED — confirm at source before relying on it (URL not fetched by T-04)"
+    },
+    "AWS::Budgets::Budget": {
+      "property": "ResourceTags",
+      "reference": "aws-resource-budgets-budget.html",
+      "reason": "The type has no Tags property; ResourceTags is its mechanism (FR-13).",
+      "referenceStatus": "UNVERIFIED — confirm at source before relying on it (URL not fetched by T-04)"
+    }
+  },
+  "exceptionTypes": {
+    "AWS::S3::BucketPolicy": {
+      "reason": "No tag support (P-19b).",
+      "reference": "aws-resource-s3-bucketpolicy.html",
+      "referenceStatus": "UNVERIFIED — confirm at source before relying on it (URL not fetched by T-04)"
+    },
+    "AWS::CloudFront::OriginAccessControl": {
+      "reason": "No tag support (P-19b).",
+      "reference": "aws-resource-cloudfront-originaccesscontrol.html",
+      "referenceStatus": "UNVERIFIED — confirm at source before relying on it (URL not fetched by T-04)"
+    },
+    "AWS::CloudFront::CachePolicy": {
+      "reason": "No tag support (P-19b).",
+      "reference": "aws-resource-cloudfront-cachepolicy.html",
+      "referenceStatus": "UNVERIFIED — confirm at source before relying on it (URL not fetched by T-04)"
+    },
+    "AWS::CloudFront::ResponseHeadersPolicy": {
+      "reason": "No tag support (P-19b).",
+      "reference": "aws-resource-cloudfront-responseheaderspolicy.html",
+      "referenceStatus": "UNVERIFIED — confirm at source before relying on it (URL not fetched by T-04)"
+    }
+  },
+  "forbiddenTypePrefixes": [
+    {
+      "prefix": "AWS::CertificateManager::",
+      "reason": "No ACM certificate in the stack (FR-08)."
+    },
+    {
+      "prefix": "AWS::Route53",
+      "reason": "No Route 53 record or zone in the stack (FR-08)."
+    },
+    {
+      "prefix": "AWS::IAM::ManagedPolicy",
+      "reason": "No IAM managed policy in the stack (design 5.3): the type has no tag support (P-19b, aws-resource-iam-managedpolicy.html, UNVERIFIED — confirm at source before relying on it), so the publisher role uses an inline policy (DD-04)."
+    }
+  ],
+  "iamResourceWildcardAllowlist": []
+}
