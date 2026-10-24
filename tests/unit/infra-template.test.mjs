@@ -274,7 +274,8 @@ test('FR-06: CanonicalHost and AlternateDomainName accept only empty or a hostna
     const re = patternOf(t, name);
     const accepted = ['', 'results.cgiar.org', 'results-test.cgiar.org', 'a', 'x'.repeat(63) + '.' + 'y'.repeat(63)];
     for (const v of accepted) assert.ok(re.test(v), `${name} accepts ${JSON.stringify(v)}`);
-    const rejected = ["a';alert(1);//", 'a\\b', 'a\nb', '${Other}', 'a b', 'a"b', 'a$b', 'a/b', 'a:443', "'", '‮.com'];
+    const rejected = ["a';alert(1);//", 'a\\b', 'a\nb', '${Other}', 'a b', 'a"b', 'a$b', 'a/b', 'a:443', "'", '‮.com',
+      'Results.cgiar.org', 'RESULTS-TEST.CGIAR.ORG', 'results.CGIAR.org'];
     for (const v of rejected) assert.ok(!re.test(v), `${name} rejects ${JSON.stringify(v)}`);
   }
 });

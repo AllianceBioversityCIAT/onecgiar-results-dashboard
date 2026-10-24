@@ -80,8 +80,9 @@ Parameters:
     Type: String
     Default: ''
     MaxLength: 253
-    AllowedPattern: '^[A-Za-z0-9.-]*$'
-    Description: Institutional host name, or empty (default) to use the *.cloudfront.net name.
+    AllowedPattern: '^[a-z0-9.-]*$'
+    ConstraintDescription: Must be a lowercase host name (a-z, 0-9, dot, hyphen) or empty.
+    Description: Lowercase institutional host name, or empty (default) to use the *.cloudfront.net name.
   CertificateArn:
     Type: String
     Default: ''
@@ -91,8 +92,9 @@ Parameters:
     Type: String
     Default: ''
     MaxLength: 253
-    AllowedPattern: '^[A-Za-z0-9.-]*$'
-    Description: Host every other host is redirected to (routing rule 1), or empty (default) for no redirect. It is inlined in the edge code, hence the strict pattern.
+    AllowedPattern: '^[a-z0-9.-]*$'
+    ConstraintDescription: Must be a lowercase host name (a-z, 0-9, dot, hyphen) or empty. Rule 1 compares the Host header exactly, so an uppercase value would cause a redirect loop.
+    Description: Lowercase host every other host is redirected to (routing rule 1), or empty (default) for no redirect. It is inlined in the edge code, hence the strict pattern.
 
 Conditions:
   HasCustomDomain: !And
