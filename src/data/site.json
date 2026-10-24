@@ -1,0 +1,467 @@
+{
+  "sections": [
+    {
+      "name": "Home",
+      "action": "home",
+      "type": "section",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "Search by",
+      "action": "geographicScope",
+      "type": "title",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "Location",
+      "action": "geographicScope",
+      "type": "subsection",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "Partners",
+      "action": "partners",
+      "type": "subsection",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "SDG",
+      "action": "SDG",
+      "type": "subsection",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "Results",
+      "action": "systemLevelOutcomes",
+      "type": "title",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "SLOs",
+      "action": "systemLevelOutcomes",
+      "type": "subsection",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "OICRs",
+      "action": "caseReports",
+      "type": "subsection",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "Innovations",
+      "action": "innovations",
+      "type": "subsection",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "Policies",
+      "action": "policies",
+      "type": "subsection",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "Milestones",
+      "action": "milestones",
+      "type": "subsection",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "Partnerships",
+      "action": "partnerships",
+      "type": "subsection",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "Capacity Development",
+      "action": "capDev",
+      "type": "subsection",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "Altmetric",
+      "action": "altmetric",
+      "type": "subsection",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "Peer Reviewed Papers",
+      "action": "publications",
+      "type": "subsection",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "MELIA Studies",
+      "action": "MELIA",
+      "type": "section",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "Genebanks",
+      "action": "genebanks",
+      "type": "section",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "Glossary",
+      "action": "glossary",
+      "type": "section",
+      "active": true,
+      "show": true
+    },
+    {
+      "name": "Ethiopia",
+      "action": "ethiopia",
+      "type": "section",
+      "active": true,
+      "show": false
+    }
+  ],
+  "crps": [
+    {
+      "acronym": "",
+      "name": "All"
+    },
+    {
+      "acronym": "A4NH",
+      "name": "A4NH - Agriculture for Nutrition and Health"
+    },
+    {
+      "acronym": "BIG DATA",
+      "name": "BIG DATA - Big Data in Agriculture"
+    },
+    {
+      "acronym": "CCAFS",
+      "name": "CCAFS - Climate Change, Agriculture and Food Security"
+    },
+    {
+      "acronym": "EiB",
+      "name": "EiB - Excellence in Breeding"
+    },
+    {
+      "acronym": "FISH",
+      "name": "FISH"
+    },
+    {
+      "acronym": "FTA",
+      "name": "FTA - Forests, Trees and Agroforestry"
+    },
+    {
+      "acronym": "GENDER",
+      "name": "GENDER - Gender Platform"
+    },
+    {
+      "acronym": "GENEBANK",
+      "name": "GENEBANK"
+    },
+    {
+      "acronym": "GLDC",
+      "name": "GLDC - Grain Legumes and Dryland Cereals"
+    },
+    {
+      "acronym": "LIVESTOCK",
+      "name": "LIVESTOCK"
+    },
+    {
+      "acronym": "MAIZE",
+      "name": "MAIZE"
+    },
+    {
+      "acronym": "PIM",
+      "name": "PIM - Policies, Institutions, and Markets"
+    },
+    {
+      "acronym": "RICE",
+      "name": "RICE"
+    },
+    {
+      "acronym": "RTB",
+      "name": "RTB - Roots, Tubers and Bananas"
+    },
+    {
+      "acronym": "WHEAT",
+      "name": "WHEAT"
+    },
+    {
+      "acronym": "WLE",
+      "name": "WLE - Water, Land and Ecosystems"
+    }
+  ],
+  "years": [
+    {
+      "year": "",
+      "name": "All Years",
+      "checked": false
+    },
+    {
+      "year": 2021,
+      "name": "2021",
+      "checked": false
+    },
+    {
+      "year": 2020,
+      "name": "2020",
+      "checked": false
+    },
+    {
+      "year": 2019,
+      "name": "2019",
+      "checked": false
+    },
+    {
+      "year": 2018,
+      "name": "2018",
+      "checked": false
+    },
+    {
+      "year": 2017,
+      "name": "2017",
+      "checked": false
+    }
+  ],
+  "chartsInfo": [
+    {
+      "title": "Cross-Cutting Topics",
+      "info": "<p><strong>Principal Objective:</strong> Principally aimed at advancing Gender / Youth / Capacity Development / Climate Change.</p> <p><strong>Significant Objective:</strong> Gender / Youth / Capacity Development / Climate Change is a significant factor, however it is not the main reason for the work.</p>"
+    },
+    {
+      "title": "Innovations by Type",
+      "info": "<p><strong>Research and Communication Methodologies and Tools:</strong> Includes new or improved research and communication tools including Information Communication Technology.</p> <p><strong>Biophysical Research:</strong> Applies the approaches and methods of physical sciences to study biological systems and may include computational biology, decision support tools, and geospatial analysis.</p> <p><strong>Genetic:</strong> Includes new and adapted varieties, cultivars, lines, and breeds.</p> <p><strong>Social Science:</strong> Includes policy, economic, market access and nutrition research.</p> <p><strong>Production Systems and Management Practices:</strong> Includes Integrated Pest Management, Sustainable Intensification, Livestock Management, Post-Harvest technologies or management practices for feed or food, Natural Resource Management, Vaccines and Animal Health Services.</p>"
+    },
+    {
+      "title": "Policies by Type",
+      "info": "<p><strong>Curriculum:</strong> The means and materials with which students interact for the purpose of achieving identified educational outcomes.</p> <p><strong>Policy or Strategy:</strong> Includes a written decision or commitment to a particular course of action by an institution; or a high level plan outlining how a particular course of action will be carried out.</p> <p><strong>Budget or Investment:</strong> A budget or investment is an estimate of funds allocated for development.</p> <p><strong>Legal Instrument:</strong> Includes laws and regulations.</p>"
+    },
+    {
+      "title": "Training Terms",
+      "info": "<p><p><strong>Long-term:</strong> Includes academic degree training.</p><strong>Short-term:</strong> Includes all other types of training.</p> "
+    },
+    {
+      "title": "Number of Publications",
+      "info": "<p><strong>Open Access</strong> means the immediate, irrevocable, unrestricted and free online access by any user worldwide to information products, and unrestricted re-use of content (which could be restricted to non-commercial use and/or granted subject to appropriate licences in line with the CGIAR IA Principles), subject to proper attribution. See <a href=\"https://cgspace.cgiar.org/bitstream/handle/10947/2875/CGIAR%20OA%20Policy%20-%20October%202%202013%20-%20Approved%20by%20Consortium%20Board.pdf?sequence=4\" target=\"_blank\">CGIAR Open Access and Data Management Policy</a> for further information.</p> <p><strong>ISI</strong> provides indexing of major international journals and proceedings (<a href=\"https://mjl.clarivate.com/search-results\" target=\"_blank\">https://mjl.clarivate.com/search-results</a>).</p>"
+    }
+  ],
+  "dataUrl": {
+    "home": "https://dataverse.harvard.edu/dataverse/CGIAR-Results-Dashboard/",
+    "systemLeveloutcomes": "https://dataverse.harvard.edu/dataverse/CGIAR-Results-Dashboard/",
+    "caseReports": "https://dataverse.harvard.edu/dataverse/CGIAR-Results-Dashboard/",
+    "milestones": "https://dataverse.harvard.edu/dataverse/CGIAR-Results-Dashboard/",
+    "innovations": "https://dataverse.harvard.edu/dataverse/CGIAR-Results-Dashboard/"
+  },
+  "messages": [
+    {}
+  ],
+  "appConfig": {
+    "production": true,
+    "tableauView": "https://public.tableau.com/views/",
+    "tableauViewNew": "https://tableau-core.cgiar.org/views/"
+  },
+  "defaults": {
+    "year": 2021,
+    "entity": "",
+    "widgetYear": 2020
+  },
+  "variants": {
+    "partnerships": {
+      "template": "partnerships-2018.twig",
+      "legacyTemplate": "partnerships.twig",
+      "threshold": 2017
+    }
+  },
+  "legacyRedirects": {
+    "homeV1": "/",
+    "home-2018V1": "/",
+    "insights": "/",
+    "test": "/",
+    "widget": "/",
+    "innovationsV1": "/innovations",
+    "innovationsTest": "/innovations",
+    "policiesV1": "/policies",
+    "publicationsV1": "/publications",
+    "altmetricV1": "/altmetric",
+    "capDev_V1": "/capDev",
+    "caseReportsV1": "/caseReports",
+    "milestones-2017": "/milestones",
+    "milestones-2018V1": "/milestones",
+    "milestonesTest": "/milestones",
+    "partnerships-2018": "/partnerships",
+    "partnerships-2018V1": "/partnerships",
+    "partnersFilter": "/partners",
+    "partnersTest": "/partners",
+    "systemLevelOutcomesOld": "/systemLevelOutcomes"
+  },
+  "cdnMap": {
+    "https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css": "./third-party/bootstrap/css/bootstrap.min.css",
+    "https://use.fontawesome.com/releases/v5.2.0/css/all.css": "./third-party/fontawesome/css/all.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/animate.css/3.7.0/animate.min.css": "./third-party/animate/animate.min.css",
+    "https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.3/jquery.csv.min.js": "./third-party/jquery-csv/jquery.csv.min.js"
+  },
+  "excludeAssets": [
+    "js/newRelic.js",
+    "js/libs/jquery/jquery-3.3.1.min.js",
+    "js/libs/sly/",
+    "js/oicr.js",
+    "json/innovations.json",
+    "images/svg/"
+  ],
+  "runtimeAssets": [
+    "csv/CGIAR Results Dashboard 2020 data - Project Management - Terms and Definitions List.csv",
+    "images/svg-interactive.svg"
+  ],
+  "tableauViews": {
+    "home": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-HOME-DB",
+      "views": [
+        "Home-DB-Full"
+      ]
+    },
+    "geographicScope": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-HOME-DB",
+      "views": [
+        "CountrySearch-DB-Full"
+      ]
+    },
+    "partners": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-HOME-DB",
+      "views": [
+        "PartnerSearch-DB-Full"
+      ]
+    },
+    "SDG": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-HOME-DB",
+      "views": [
+        "SDGSearch-DB-Full"
+      ]
+    },
+    "systemLevelOutcomes": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-SLO",
+      "views": [
+        "SLO-DB-Full"
+      ]
+    },
+    "caseReports": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-OICR",
+      "views": [
+        "OCIR-DB-Full"
+      ]
+    },
+    "innovations": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-Innovations",
+      "views": [
+        "Innovations-DB-Full"
+      ]
+    },
+    "policies": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-Policies",
+      "views": [
+        "Policies-DB-Full"
+      ]
+    },
+    "milestones": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-Milestones",
+      "views": [
+        "Milestones-DB-Full"
+      ]
+    },
+    "partnerships": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-Partnerships",
+      "views": [
+        "Partnerships-DB-Full"
+      ],
+      "legacy": {
+        "server": "public.tableau.com",
+        "workbook": "Results",
+        "views": [
+          "3_1DBTotalPartnerships",
+          "3_2DBTotalPartbyStage",
+          "DBKeyPartnershipsMap",
+          "3_4DBKeyPartnerships",
+          "3_5DBKeyPartbyStage",
+          "3_6DBKeyPartbyStageandProgramType2",
+          "3_7DBKeyPartnersDetails"
+        ]
+      }
+    },
+    "capDev": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-CAPDEV",
+      "views": [
+        "CapDev-DB-Full"
+      ]
+    },
+    "altmetric": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-Altmetric",
+      "views": [
+        "Altmetrics-DB-Full"
+      ]
+    },
+    "publications": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-Publications",
+      "views": [
+        "Publications-DB-Full"
+      ]
+    },
+    "MELIA": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-MELIA",
+      "views": [
+        "MELIA-DB-Full"
+      ]
+    },
+    "genebanks": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-Genebank",
+      "views": [
+        "Genebank-DB-Full"
+      ]
+    },
+    "ethiopia": {
+      "server": "tableau-core.cgiar.org",
+      "workbook": "AR-Ethiopia-DB_16243582481240",
+      "views": [
+        "CountrySearch-DB-Full"
+      ]
+    }
+  },
+  "tableauHosts": [],
+  "allowedHosts": [
+    "127.0.0.1",
+    "localhost",
+    "[::1]",
+    "tableau-core.cgiar.org",
+    "public.tableau.com",
+    "fonts.googleapis.com",
+    "fonts.gstatic.com"
+  ],
+  "buildTimeBudgetMs": 60000,
+  "sentinel": "RDHOSTORIGINSENTINEL"
+}
