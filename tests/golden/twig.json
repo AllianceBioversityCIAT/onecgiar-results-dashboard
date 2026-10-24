@@ -1,0 +1,271 @@
+{
+  "meta": {
+    "purpose": "Golden facts of Twig 1.35.4 semantics (P-7, P-22, DD-05). Expected values are derived from the cited PHP source (or the PHP manual for PHP language behavior) and were NOT produced by running twig.js.",
+    "twigTag": "v1.35.4",
+    "twigRepo": "https://github.com/twigphp/Twig",
+    "rawBase": "https://raw.githubusercontent.com/twigphp/Twig/v1.35.4/",
+    "phpManualBase": "https://raw.githubusercontent.com/php/doc-en/master/",
+    "readAs": "text only; PHP and Twig were never installed or executed",
+    "readOn": "2026-10-23"
+  },
+  "sources": {
+    "lib/Twig/Environment.php": "deceb62442f965d3a69959b3a752d3050e7ee58cb9803907299f7b36afbbd4fd",
+    "lib/Twig/Extension/Core.php": "604b082a4c359ac3497a7632adcb37d53b568a473f25470398e7b2d2bd76ce90",
+    "lib/Twig/Extension/Escaper.php": "244bc2568b67588d21c9f897927a8c2ebf340f75552c3710896e546d06fd3b94",
+    "lib/Twig/NodeVisitor/Escaper.php": "f527450afeefffccd2e21c27ed1d7fab4f426a1e2c42ce910ccd291001cde4d5",
+    "lib/Twig/Node/Set.php": "97b1aeb52e831992e071acad4839aba2ee2bf8dda10768b161219c458f659075",
+    "lib/Twig/Node/Print.php": "8fa30376aa1bc5f4dda745a71f3b6e5cd9377e8513d81f7819a4b4604867d530",
+    "lib/Twig/Node/Macro.php": "40258f714bf1718947cf97063db1493f743eb0ca88af8fd7b00aff5f6c72e5c3",
+    "lib/Twig/Node/Include.php": "2e8cd9a8930dbeb8019dbf0a83ee08da9fd3d1c5f419244f47ff3d7438967f72",
+    "lib/Twig/Node/Expression/Name.php": "129877d1e650d1b9d2874472709d6ff761cebc837cdf3ead0f478deea3407930",
+    "lib/Twig/Node/Expression/Conditional.php": "06c8c7e700736d24d5d7b09eb14ab73164ebedde04d7516e4cb18fec3d2060dc",
+    "lib/Twig/Node/Expression/Binary/Equal.php": "2b3813b5706cf986efac5d646532bdcfa6ba46f896c56613c7935d10856c9cb3",
+    "lib/Twig/Node/Expression/Filter/Default.php": "8f90fe736850209f2a74a124f7213dcb3d96169419fc9924fb2dc7943d593386",
+    "lib/Twig/Markup.php": "e980549f70e8796e1a59d245325adf4c0e21aa804803aa1d6b87bc109e069d9e",
+    "lib/Twig/Template.php": "3b6cf798ca591057102148a76b2af503ab7bc2bc4b98920da8abb6397843696f",
+    "lib/Twig/Lexer.php": "3eb37f0ba61da49144de134f60b72127577185d2409fbaa44ae38b14a41b7008",
+    "lib/Twig/Loader/Filesystem.php": "73aa83cdbc179746cd095d6fe61c24914947245162b36f554da98bbf5253f936",
+    "lib/Twig/TokenParser/Include.php": "d2c5a92cd3f4c90a92c21b0b47f18663363ef7182cd100710bae72d58bf564b6",
+    "reference/strings/functions/htmlspecialchars.xml (php/doc-en)": "b29848f5ae88648a76491bbd70673ba855a271e75dceeb0947af1a498c1884a6",
+    "language/types/string.xml (php/doc-en)": "09b1db94234fe609aa4003882029e8ca2d20593caa6b1b1e5dda35cb13fef81b"
+  },
+  "facts": [
+    { "id": "F1", "claim": "Default autoescape strategy is html", "cites": [
+      { "file": "lib/Twig/Environment.php", "line": 114, "quote": "'autoescape' => 'html'," },
+      { "file": "lib/Twig/Environment.php", "line": 128, "quote": "$this->addExtension(new Twig_Extension_Escaper($options['autoescape']));" },
+      { "file": "lib/Twig/Extension/Escaper.php", "line": 24, "quote": "public function __construct($defaultStrategy = 'html')" } ] },
+    { "id": "F2", "claim": "The html strategy is htmlspecialchars with ENT_QUOTES | ENT_SUBSTITUTE on UTF-8: & -> &amp;, \" -> &quot;, ' -> &#039;, < -> &lt;, > -> &gt;; invalid UTF-8 -> U+FFFD; already-encoded input is encoded again (double_encode default true, Twig passes 3 arguments)", "cites": [
+      { "file": "lib/Twig/Extension/Core.php", "line": 1026, "quote": "return htmlspecialchars($string, ENT_QUOTES | ENT_SUBSTITUTE, $charset);" },
+      { "file": "lib/Twig/Environment.php", "line": 111, "quote": "'charset' => 'UTF-8'," },
+      { "file": "reference/strings/functions/htmlspecialchars.xml (php/doc-en)", "line": 58, "quote": "<literal>&amp;#039;</literal> (for <constant>ENT_HTML401</constant>)" } ] },
+    { "id": "F3", "claim": "A non-string, non-object value (bool, int, null) is returned unchanged by the html escaper", "cites": [
+      { "file": "lib/Twig/Extension/Core.php", "line": 990, "quote": "if (is_object($string) && method_exists($string, '__toString')) {" },
+      { "file": "lib/Twig/Extension/Core.php", "line": 993, "quote": "return $string;" } ] },
+    { "id": "F4", "claim": "The auto-escaper does not escape a Twig_Markup value again", "cites": [
+      { "file": "lib/Twig/Extension/Core.php", "line": 985, "quote": "if ($autoescape && $string instanceof Twig_Markup) {" },
+      { "file": "lib/Twig/NodeVisitor/Escaper.php", "line": 143, "quote": "new Twig_Node_Expression_Constant(true, $line)" } ] },
+    { "id": "F5", "claim": "{% set x %}...{% endset %} captures output (already escaped once) into a Twig_Markup and is safe; a set of a plain expression is not safe", "cites": [
+      { "file": "lib/Twig/Node/Set.php", "line": 29, "quote": "$this->setAttribute('safe', true);" },
+      { "file": "lib/Twig/Node/Set.php", "line": 64, "quote": "new Twig_Markup(\\$tmp, \\$this->env->getCharset())" },
+      { "file": "lib/Twig/Node/Set.php", "line": 86, "quote": "new Twig_Markup(\\$tmp, \\$this->env->getCharset())" } ] },
+    { "id": "F6", "claim": "{{ expr }} compiles to a PHP echo; PHP prints true as 1 and false and null as the empty string", "cites": [
+      { "file": "lib/Twig/Node/Print.php", "line": 29, "quote": "->write('echo ')" },
+      { "file": "language/types/string.xml (php/doc-en)", "line": 1241, "quote": "<literal>\"1\"</literal>. <type>bool</type> &false; is converted to" } ] },
+    { "id": "F7", "claim": "json_encode returns PHP json_encode output (true -> true, false -> false) and is not marked safe, so its result is html-escaped afterwards", "cites": [
+      { "file": "lib/Twig/Extension/Core.php", "line": 156, "quote": "new Twig_SimpleFilter('json_encode', 'twig_jsonencode_filter')," },
+      { "file": "lib/Twig/Extension/Core.php", "line": 600, "quote": "return json_encode($value, $options);" } ] },
+    { "id": "F8", "claim": "default replaces '', false, null, [] and undefined; it keeps \"0\", 0 and other values", "cites": [
+      { "file": "lib/Twig/Extension/Core.php", "line": 802, "quote": "if (twig_test_empty($value)) {" },
+      { "file": "lib/Twig/Extension/Core.php", "line": 1469, "quote": "return '' === $value || false === $value || null === $value || array() === $value;" },
+      { "file": "lib/Twig/Node/Expression/Filter/Default.php", "line": 28, "quote": "$test = new Twig_Node_Expression_Test_Defined(clone $node, 'defined', new Twig_Node(), $node->getTemplateLine());" } ] },
+    { "id": "F9", "claim": "== compiles to PHP ==", "cites": [
+      { "file": "lib/Twig/Node/Expression/Binary/Equal.php", "line": 15, "quote": "return $compiler->raw('==');" } ] },
+    { "id": "F10", "claim": "Every template name is looked up from the loader root path, not from the including template (so ./pages/x.twig inside pages/ resolves to <root>/pages/x.twig)", "cites": [
+      { "file": "lib/Twig/Loader/Filesystem.php", "line": 217, "quote": "if (is_file($path.'/'.$shortname)) {" } ] },
+    { "id": "F11", "claim": "strict_variables is off by default: an undefined variable or attribute is null and prints as the empty string", "cites": [
+      { "file": "lib/Twig/Environment.php", "line": 113, "quote": "'strict_variables' => false," },
+      { "file": "lib/Twig/Node/Expression/Name.php", "line": 59, "quote": "if ($this->getAttribute('ignore_strict_check') || !$compiler->getEnvironment()->isStrictVariables()) {" } ] },
+    { "id": "F12", "claim": "include ... with vars passes array_merge(context, vars); include without with passes the whole context", "cites": [
+      { "file": "lib/Twig/Node/Include.php", "line": 80, "quote": "->raw('array_merge($context, ')" },
+      { "file": "lib/Twig/Node/Include.php", "line": 77, "quote": "$compiler->raw(false === $this->getAttribute('only') ? '$context' : 'array()');" } ] },
+    { "id": "F13", "claim": "A macro returns its output as a Twig_Markup (not escaped again)", "cites": [
+      { "file": "lib/Twig/Node/Macro.php", "line": 118, "quote": "new Twig_Markup(\\$tmp, \\$this->env->getCharset())" } ] },
+    { "id": "F14", "claim": "The lexer drops one newline after a block tag and after a comment close", "cites": [
+      { "file": "lib/Twig/Lexer.php", "line": 66, "quote": ".preg_quote($this->options['tag_block'][1], '/').')\\n?/A'," },
+      { "file": "lib/Twig/Lexer.php", "line": 69, "quote": ".preg_quote($this->options['tag_comment'][1], '/').')\\n?/s'," } ] },
+    { "id": "F15", "claim": "The ternary compiles to the PHP ternary (PHP truthiness: '', '0', 0, false, null and [] are false)", "cites": [
+      { "file": "lib/Twig/Node/Expression/Conditional.php", "line": 24, "quote": "->raw(') ? (')" } ] }
+  ],
+  "cases": [
+    { "id": "esc-amp", "fact": "F2", "template": "{{ v }}", "context": { "v": "a&b" }, "expected": "a&amp;b" },
+    { "id": "esc-dquote", "fact": "F2", "template": "{{ v }}", "context": { "v": "say \"hi\"" }, "expected": "say &quot;hi&quot;" },
+    { "id": "esc-squote", "fact": "F2", "template": "{{ v }}", "context": { "v": "it's" }, "expected": "it&#039;s" },
+    { "id": "esc-lt-gt", "fact": "F2", "template": "{{ v }}", "context": { "v": "<b>x</b>" }, "expected": "&lt;b&gt;x&lt;/b&gt;" },
+    { "id": "esc-mixed", "fact": "F2", "template": "{{ v }}", "context": { "v": "x'y&\"<>" }, "expected": "x&#039;y&amp;&quot;&lt;&gt;" },
+    { "id": "esc-double-encode", "fact": "F2", "template": "{{ v }}", "context": { "v": "a&amp;b" }, "expected": "a&amp;amp;b" },
+    { "id": "esc-js-literal", "fact": "F1", "template": "var o = { h: '{{ v }}', q: '{{ w }}' };", "context": { "v": "a'b</script>", "w": "x\";alert(1)//" }, "expected": "var o = { h: 'a&#039;b&lt;/script&gt;', q: 'x&quot;;alert(1)//' };" },
+    { "id": "esc-raw", "fact": "F1", "template": "{{ v|raw }}", "context": { "v": "a&b" }, "expected": "a&b" },
+    { "id": "esc-int-passthrough", "fact": "F3", "template": "{{ n }}", "context": { "n": 2021 }, "expected": "2021" },
+    { "id": "set-capture-once", "fact": "F5", "template": "{% set s %}a{{ v }}b{% endset %}[{{ s }}]", "context": { "v": "&" }, "expected": "[a&amp;b]" },
+    { "id": "set-capture-text-safe", "fact": "F5", "template": "{% set s %}<b>x</b>{% endset %}{{ s }}", "context": {}, "expected": "<b>x</b>" },
+    { "id": "set-expression-not-safe", "fact": "F5", "template": "{% set s = '<i>' %}{{ s }}", "context": {}, "expected": "&lt;i&gt;" },
+    { "id": "set-capture-menu-url", "fact": "F5", "template": "{% set url %}./{{ a }}{% if q %}?{{ q }}{% endif %}{% endset %}<a href=\"{{ url }}\">", "context": { "a": "home", "q": "embed=true&hostOrigin=x" }, "expected": "<a href=\"./home?embed=true&amp;hostOrigin=x\">" },
+    { "id": "print-true-false-literals", "fact": "F6", "template": "{{ true }}|{{ false }}", "context": {}, "expected": "1|" },
+    { "id": "print-bool-variables", "fact": "F6", "template": "{{ t }}|{{ f }}", "context": { "t": true, "f": false }, "expected": "1|" },
+    { "id": "print-null", "fact": "F6", "template": "a{{ n }}b", "context": { "n": null }, "expected": "ab" },
+    { "id": "print-bool-in-attribute", "fact": "F6", "template": "class=\"active-{{ s }}\"", "context": { "s": true }, "expected": "class=\"active-1\"" },
+    { "id": "print-embed-true", "fact": "F6", "template": "class=\"filters{{ e }}\"", "context": { "e": true }, "expected": "class=\"filters1\"" },
+    { "id": "print-embed-false", "fact": "F6", "template": "class=\"filters{{ e }}\"", "context": { "e": false }, "expected": "class=\"filters\"" },
+    { "id": "set-capture-bool", "fact": "F6", "template": "{% set s %}{{ t }}{% endset %}[{{ s }}]", "context": { "t": true }, "expected": "[1]" },
+    { "id": "json-bool", "fact": "F7", "template": "{{ t|json_encode() }}|{{ f|json_encode() }}", "context": { "t": true, "f": false }, "expected": "true|false" },
+    { "id": "json-string-escaped", "fact": "F7", "template": "{{ v|json_encode }}", "context": { "v": "a\"b" }, "expected": "&quot;a\\&quot;b&quot;" },
+    { "id": "default-empty-string", "fact": "F8", "template": "{{ v|default('D') }}", "context": { "v": "" }, "expected": "D" },
+    { "id": "default-string-zero", "fact": "F8", "template": "{{ v|default('D') }}", "context": { "v": "0" }, "expected": "0" },
+    { "id": "default-int-zero", "fact": "F8", "template": "{{ v|default('D') }}", "context": { "v": 0 }, "expected": "0" },
+    { "id": "default-null", "fact": "F8", "template": "{{ v|default('D') }}", "context": { "v": null }, "expected": "D" },
+    { "id": "default-false", "fact": "F8", "template": "{{ v|default('D') }}", "context": { "v": false }, "expected": "D" },
+    { "id": "default-empty-array", "fact": "F8", "template": "{{ v|default('D') }}", "context": { "v": [] }, "expected": "D" },
+    { "id": "default-undefined", "fact": "F8", "template": "{{ nope|default('D') }}", "context": {}, "expected": "D" },
+    { "id": "default-integer-kept", "fact": "F8", "template": "{{ v|default('All Years') }}", "context": { "v": 2021 }, "expected": "2021" },
+    { "id": "default-value-escaped", "fact": "F8", "template": "{{ v|default('All Years') }}", "context": { "v": "a&b" }, "expected": "a&amp;b" },
+    { "id": "default-all-years", "fact": "F8", "template": "{{ v|default('All Years') }}", "context": { "v": "" }, "expected": "All Years" },
+    { "id": "eq-int-numeric-string", "fact": "F9", "template": "{% if a == b %}Y{% else %}N{% endif %}", "context": { "a": 2021, "b": "2021" }, "expected": "Y" },
+    { "id": "eq-empty-vs-int", "fact": "F9", "template": "{% if a == b %}Y{% else %}N{% endif %}", "context": { "a": "", "b": 2021 }, "expected": "N" },
+    { "id": "eq-empty-vs-empty", "fact": "F9", "template": "{% if a == b %}Y{% else %}N{% endif %}", "context": { "a": "", "b": "" }, "expected": "Y" },
+    { "id": "eq-bool-false", "fact": "F9", "template": "{% if a == false %}Y{% else %}N{% endif %}", "context": { "a": false }, "expected": "Y" },
+    { "id": "ternary-true", "fact": "F15", "template": "{{ x ? 'block' : 'none' }}", "context": { "x": true }, "expected": "block" },
+    { "id": "ternary-false", "fact": "F15", "template": "{{ x ? 'block' : 'none' }}", "context": { "x": false }, "expected": "none" },
+    { "id": "ternary-string-zero", "fact": "F15", "template": "{{ x ? 'block' : 'none' }}", "context": { "x": "0" }, "expected": "none" },
+    { "id": "undefined-prints-empty", "fact": "F11", "template": "a{{ nope }}b{{ nope.x }}c", "context": {}, "expected": "abc" },
+    { "id": "newline-after-block-tag", "fact": "F14", "template": "a{% if t %}\nb{% endif %}\nc", "context": { "t": true }, "expected": "abc" },
+    { "id": "newline-after-comment", "fact": "F14", "template": "a{# c #}\nb", "context": {}, "expected": "ab" },
+    { "id": "newline-after-output-kept", "fact": "F14", "template": "a{{ v }}\nb", "context": { "v": "x" }, "expected": "ax\nb" },
+    { "id": "newline-after-multiline-comment", "fact": "F14", "template": "a{# one\ntwo #}\nb", "context": {}, "expected": "ab" },
+    { "id": "newline-after-literal-hash-brace-kept", "fact": "F14", "template": "a #}\nb", "context": {}, "expected": "a #}\nb", "note": "a literal #} in plain text is not a comment close (Lexer.php:69 applies to a lexed comment only), so its newline stays" },
+    { "id": "newline-after-hash-brace-in-output-string-kept", "fact": "F14", "template": "{{ '#}' }}\nb", "context": {}, "expected": "#}\nb", "note": "#} inside an output expression; newline after }} is kept (Lexer.php:66 is for block tags only)" },
+    { "id": "include-with-import-macro-root-paths", "fact": "F10",
+      "files": {
+        "index.twig": "{% include './pages/a.twig' with {'p': 'x&y'} %}",
+        "pages/a.twig": "{% import \"./macros/m.twig\" as m %}[{{ m.mk('n', p) }}]",
+        "macros/m.twig": "{% macro mk(n, v) %}<i n=\"{{ n }}\">{{ v }}</i>{% endmacro %}"
+      },
+      "entry": "index.twig", "context": {}, "expected": "[<i n=\"n\">x&amp;y</i>]", "alsoFacts": ["F12", "F13"] },
+    { "id": "include-without-with-passes-context", "fact": "F12",
+      "files": { "index.twig": "{% set a = 'v&' %}{% include './pages/b.twig' %}", "pages/b.twig": "[{{ a }}]" },
+      "entry": "index.twig", "context": {}, "expected": "[v&amp;]" },
+    { "id": "include-with-overrides-context", "fact": "F12",
+      "files": { "index.twig": "{% set a = '1' %}{% include './pages/b.twig' with {'a': '2'} %}", "pages/b.twig": "[{{ a }}]" },
+      "entry": "index.twig", "context": {}, "expected": "[2]" }
+  ],
+  "widgetCase": {
+    "id": "sections-json-quot", "fact": "F2",
+    "cite": "src/templates/widget.twig:115 prints {{ sectionsJson }} with no |raw (the original getSections line)",
+    "template": "widget.twig",
+    "context": { "baseURL": "http://x", "baseOrigin": "http://x", "sectionsJson": "[\"home\",\"a'b\"]" },
+    "expectedContains": "(\"[&quot;home&quot;,&quot;a&#039;b&quot;]\").replace(/&quot;/g,'\"')"
+  },
+  "pageCases": {
+    "note": "home.twig and innovations.twig rendered with the variables of design 7.1 step 3 (inline minimal data). Expected fragments are derived from the cited Twig facts, not from twig.js output.",
+    "baseContext": {
+      "sections": [
+        { "name": "Home", "action": "home", "active": true, "show": true, "type": "section" },
+        { "name": "Results", "action": "", "active": true, "show": true, "type": "title" },
+        { "name": "Innovations", "action": "innovations", "active": true, "show": true, "type": "subsection" },
+        { "name": "Ethiopia", "action": "ethiopia", "active": true, "show": false, "type": "subsection" },
+        { "name": "Soon", "action": "soon", "active": false, "show": true, "type": "subsection" }
+      ],
+      "crps": [ { "acronym": "A'B", "name": "AB & C" } ],
+      "years": [ { "year": 2021, "name": "2021" }, { "year": "", "name": "All Years" } ],
+      "chartsInfo": [],
+      "messagesArray": [ { "id": 7, "crp": "A&B", "year": 2021, "indicator": "innovations", "message": "Hi <b>", "level": "INFO" } ],
+      "dataUrl": "",
+      "currentSection": "innovations",
+      "entitySelected": "",
+      "yearSelected": 2021,
+      "forceRefresh": false,
+      "embed": false,
+      "displayNav": true,
+      "hostOrigin": "",
+      "appConfig": { "production": false, "tableauView": "view&1", "tableauViewNew": "" },
+      "queryParams": "",
+      "glossarySection": false
+    },
+    "scenarios": [
+      { "id": "normal", "template": "innovations.twig", "overrides": {},
+        "contains": [
+          { "text": "<p id=\"filtertitley\" class=\"filter-title years\">2021</p>", "fact": "F8", "why": "integer 2021 is kept by default and echoed unchanged (F3)" },
+          { "text": "<p id=\"filtertitlec\" class=\"filter-title portfolio\">Research Programs</p>", "fact": "F8", "why": "empty entity gets the default" },
+          { "text": "<div class=\"filters\">", "fact": "F6", "why": "embed false prints as the empty string" },
+          { "text": "filter-position filter-loading fyear", "fact": "F6", "why": "embed false prints as the empty string" },
+          { "text": "production: false,", "fact": "F7", "why": "json_encode of false" },
+          { "text": "forceRefresh: false", "fact": "F7", "why": "json_encode of false" },
+          { "text": "tableauView: 'view&amp;1',", "fact": "F2", "why": "autoescape inside a JavaScript literal" },
+          { "text": "value=\"2021\" checked=\"checked\"", "fact": "F9", "why": "2021 == 2021" },
+          { "text": "value=\"A&#039;B\" >", "fact": "F2", "why": "crp acronym escaped in an attribute; A'B == '' is false, so no checked attribute" },
+          { "text": "<li class=\"active menu-subsection nav-item\">", "fact": "F15", "why": "currentSection == action" },
+          { "text": "class=\"active-1 nav-link sectionAction-innovations\"", "fact": "F6", "why": "section.active true prints 1" },
+          { "text": "href=\"./innovations\"", "fact": "F5", "why": "set capture with an empty queryParams" },
+          { "text": "style=\"display:block;\"", "fact": "F15", "why": "displayNav true" },
+          { "text": "<div id=\"A&amp;B\" class=\"alert alert-INFO crp-messages", "fact": "F13", "why": "message macro, crp escaped once" },
+          { "text": "<i class=\"fas fa-info-circle\"></i>", "fact": "F5", "why": "captured set inside the macro is Markup, not escaped again" },
+          { "text": "Hi &lt;b&gt;", "fact": "F2", "why": "message text escaped" },
+          { "text": "</p>   \n                          </div>", "fact": "F14", "why": "newline after the footer comment is dropped by the Twig lexer (footer.twig:3 comment, 14 spaces before it and 12 after it)" }
+        ],
+        "notContains": [
+          { "text": "sectionAction-ethiopia", "why": "show=false rows are not rendered (side-menu.twig:6)" },
+          { "text": "sectionAction-soon", "why": "inactive rows are not rendered (side-menu.twig:6)" },
+          { "text": "padding-left: 0!important", "why": "displayNav true" },
+          { "text": "value=\"\" checked", "why": "All Years radio is not checked when yearSelected is 2021" }
+        ] },
+      { "id": "embed-hostile", "template": "innovations.twig",
+        "overrides": { "embed": true, "displayNav": false, "entitySelected": "x'y&", "yearSelected": "<b>", "hostOrigin": "http://a.b/?q=1&r='", "queryParams": "embed=true&hostOrigin=http://a.b&displayNav=false", "appConfig": { "production": true, "tableauView": "", "tableauViewNew": "" }, "forceRefresh": true },
+        "contains": [
+          { "text": "<div class=\"filters1\">", "fact": "F6", "why": "embed true prints 1" },
+          { "text": "filter-position1 filter-loading fyear", "fact": "F6", "why": "embed true prints 1" },
+          { "text": "production: true,", "fact": "F7", "why": "json_encode of true" },
+          { "text": "forceRefresh: true", "fact": "F7", "why": "json_encode of true" },
+          { "text": "hostOrigin: 'http://a.b/?q=1&amp;r=&#039;',", "fact": "F2", "why": "& and ' escaped in a JavaScript literal" },
+          { "text": "entitySelected: 'x&#039;y&amp;',", "fact": "F2", "why": "' -> &#039; (not &#39;)" },
+          { "text": "yearSelected: '&lt;b&gt;',", "fact": "F2", "why": "< and > escaped" },
+          { "text": "<p id=\"filtertitley\" class=\"filter-title years\">&lt;b&gt;</p>", "fact": "F2", "why": "title text escaped" },
+          { "text": "<p id=\"filtertitlec\" class=\"filter-title portfolio\">x&#039;y&amp;</p>", "fact": "F2", "why": "title text escaped" },
+          { "text": "href=\"./innovations?embed=true&amp;hostOrigin=http://a.b&amp;displayNav=false\"", "fact": "F5", "why": "captured set: escaped once, not twice" },
+          { "text": "style=\"display:none;\"", "fact": "F15", "why": "displayNav false" },
+          { "text": "style=\"padding-left: 0!important\"", "fact": "F9", "why": "displayNav == false" },
+          { "text": "<script src=\"./js/embedMode.js?20200806b\" charset=\"utf-8\"></script>", "fact": "F15", "why": "if embed" }
+        ],
+        "notContains": [
+          { "text": "testingMessage", "why": "production true hides the testing banner" },
+          { "text": "&amp;amp;", "why": "no value is escaped twice" },
+          { "text": "checked=\"checked\"", "why": "no radio matches the hostile year or entity" }
+        ] },
+      { "id": "all-years", "template": "home.twig",
+        "overrides": { "yearSelected": "", "currentSection": "home" },
+        "contains": [
+          { "text": "<p id=\"filtertitley\" class=\"filter-title years\">All Years</p>", "fact": "F8", "why": "empty year gets the default" },
+          { "text": "value=\"\" checked=\"checked\"", "fact": "F9", "why": "'' == ''" },
+          { "text": "<li class=\"active menu-section nav-item\">", "fact": "F15", "why": "currentSection == action" }
+        ],
+        "notContains": [
+          { "text": "value=\"2021\" checked", "why": "'' == 2021 is false" }
+        ] }
+    ]
+  },
+  "knownDivergences": [
+    {
+      "id": "D-null-eq-false",
+      "twig": "null == false is true in PHP (F9)",
+      "twigjs": "null == false is false in JavaScript",
+      "reachable": false,
+      "why": "design 7.1 step 3 passes displayNav and embed as booleans, never null; the templates compare only displayNav == false"
+    },
+    {
+      "id": "D-invalid-utf8",
+      "twig": "invalid UTF-8 becomes U+FFFD (ENT_SUBSTITUTE, F2)",
+      "twigjs": "JS strings are UTF-16; a lone surrogate is escaped unchanged",
+      "reachable": false,
+      "why": "all variables come from site.json and constants; no raw request bytes reach Twig (values from the URL are read in the browser, FR-07)"
+    },
+    {
+      "id": "D-empty-hash-truthy",
+      "twig": "an empty array/hash is false in a condition (PHP truthiness, F15: Conditional.php:24; the same ternary/if rule)",
+      "twigjs": "{% if {} %} and {% if h %} with h = {} are true (JS objects are truthy)",
+      "reachable": false,
+      "why": "no active template tests a hash or array for emptiness; the conditions use booleans and strings"
+    },
+    {
+      "id": "D-concat-bool",
+      "twig": "true ~ \"\" is \"1\" (the ~ operator converts with PHP string conversion, F6)",
+      "twigjs": "true ~ \"\" is \"true\"",
+      "reachable": false,
+      "why": "the templates do not use ~; booleans are printed with {{ }}, which twig-config patches (F6)"
+    },
+    {
+      "id": "D-null-loose-equality",
+      "twig": "null == \"\" and null == 0 are true in PHP (F9)",
+      "twigjs": "null == \"\" and null == 0 are false in JavaScript (the gap is wider than null == false)",
+      "reachable": false,
+      "why": "== compares only displayNav with false, and year values with yearSelected (integers and strings); the build never passes null"
+    }
+  ]
+}
