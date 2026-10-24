@@ -13,3 +13,4 @@ src/public/** -text
 *.ttf -text
 *.eot -text
 *.otf -text
+release/** -text

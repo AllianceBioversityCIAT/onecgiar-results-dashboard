@@ -1,0 +1,61 @@
+* {
+    scroll-behavior: smooth;
+}
+
+iframe {
+    display: block;
+    margin: 0 auto;
+}
+
+.clearFilterBtn {
+    width: 95px;
+    padding: 2px;
+    margin-top: 1rem;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: 5px;
+    color: white;
+    background: #2F0C39;
+    font-size: 10px;
+}
+
+.clearFilterBtn:hover {
+    background: #501563;
+}
+
+.tableWrapper {
+    width: 100%;
+}
+
+table {
+    width: 100%;
+    font-size: 14px;
+    border-collapse: collapse;
+    background-color: white;
+}
+
+td, th {
+    border: 2px solid #dddddd;
+    text-align: justify;
+    padding: 8px;
+    table-layout: fixed;
+}
+
+.cellTerm {
+    width: 20%;
+}
+
+.tableCaption {
+    width: 100%;
+    caption-side: top;
+    font-size: 14px;
+    font-weight: bold;
+    color: #00a0b0;
+}
+
+#termsDefinitionsTable {
+    display: block;
+    height: 500px;
+    overflow-y: scroll;
+}

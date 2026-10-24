@@ -1,0 +1,170 @@
+(function () {
+  // Captured first: document.currentScript is null once an async/defer script has run or when AMD defers the factory.
+  var rdCurrentScript = document.currentScript;
+  var rdScriptPath = '/widget/main.js';
+  var rdScriptUrl = null;
+  if (rdCurrentScript && rdCurrentScript.src) {
+    rdScriptUrl = new URL(rdCurrentScript.src, document.baseURI);
+  } else {
+    var rdScripts = document.scripts || document.getElementsByTagName('script');
+    for (var i = rdScripts.length - 1; i >= 0 && !rdScriptUrl; i--) {
+      if (!rdScripts[i].src) { continue; }
+      try {
+        var candidate = new URL(rdScripts[i].src, document.baseURI);
+        if (candidate.pathname.slice(-rdScriptPath.length) === rdScriptPath) { rdScriptUrl = candidate; }
+      } catch (e) {}
+    }
+  }
+  if (!rdScriptUrl) {
+    throw new Error('ResultsDashboardWidget: cannot resolve the URL it was loaded from (expected a <script> ending in ' + rdScriptPath + ')');
+  }
+  var rdBaseOrigin = rdScriptUrl.origin;
+  var rdBasePath = rdScriptUrl.pathname;
+  if (rdBasePath.slice(-rdScriptPath.length) === rdScriptPath) { rdBasePath = rdBasePath.slice(0, -rdScriptPath.length); }
+  var rdBaseURL = rdBaseOrigin + rdBasePath;
+
+(function (global, factory) {
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+	typeof define === 'function' && define.amd ? define(factory) :
+	(global.ResultsDashboardWidget = factory());
+}(this, (function () { 'use strict';
+
+  var ResultsDashboardWidget = function ResultsDashboardWidget(element, userOptions) {
+    if ( userOptions === void 0 ) userOptions = {};
+
+    if (typeof element === 'string') {
+      // Get element
+      element = document.getElementById(element);
+    }
+
+    if (!element || !element.nodeName) {
+      throw new Error('no element is specified to initialize the CGIAR Dashboard');
+    }
+
+    this.element = element;
+    this.iframe;
+    this.userOptions = userOptions;
+		if (typeof userOptions.displayNav === 'undefined') {
+		  this.userOptions.displayNav = true;
+		}else {
+			this.userOptions.displayNav = userOptions.displayNav;
+		}
+    this.hostOrigin = document.location.origin;
+		this.baseURL = rdBaseURL;
+		this.baseOrigin = rdBaseOrigin;
+
+    // Initialize
+    this.init();
+  }
+
+  // Init
+  ResultsDashboardWidget.prototype.init = function init () {
+    var widget = this;
+    var section = widget.userOptions.currentSection || '';
+    var year = widget.userOptions.yearSelected || 2020;
+    // Create Iframe
+    widget.createIframe(widget.baseURL + '/'+ section +'?year='+year+'&embed=true&hostOrigin='+ widget.hostOrigin + '&displayNav=' + widget.userOptions.displayNav);
+		var hiddenDiv = document.getElementsByClassName("wysiwyg--left-content");
+		for (var i = 0; i < hiddenDiv.length; i++) {
+	    hiddenDiv[i].style.visibility = 'hidden';
+  	}
+  };
+
+  // Change section
+  ResultsDashboardWidget.prototype.changeSection = function changeSection (section) {
+    var widget = this;
+    sendIframeMessage(this.iframe, {
+      eventName: "changeSection",
+      data: section
+    });
+		this.userOptions.currentSection = section;
+  };
+
+  // Display Navigation Menu
+  ResultsDashboardWidget.prototype.displayNav = function displayNav (state) {
+		sendIframeMessage(this.iframe, {
+      eventName: "displayNav",
+      data: state
+    });
+		this.userOptions.displayNav = state;
+  };
+
+  // Set filter year
+  ResultsDashboardWidget.prototype.setFilterYear = function setFilterYear (year) {
+		sendIframeMessage(this.iframe, {
+      eventName: "setFilterYear",
+      data: year
+    });
+		this.userOptions.yearSelected = year;
+  };
+
+  // Create Iframe Item
+  ResultsDashboardWidget.prototype.createIframe = function createIframe (url) {
+    var widget = this;
+    widget.iframe = document.createElement('iframe');
+    widget.iframe.setAttribute('id', 'iframe-dashboardEmbed');
+		widget.iframe.setAttribute('scrolling', 'no');
+    widget.iframe.setAttribute('src', url);
+    widget.iframe.style.width = "100%";
+    widget.iframe.style.height = "100%";
+		widget.iframe.style.overflow = "hidden"
+    widget.iframe.frameBorder = 0;
+    // Add iframe item
+    widget.element.appendChild(widget.iframe);
+
+		// Add iframe onload Functions
+		widget.iframe.onload = function(){
+			// Remove Wordpress wrapping div
+      var iframeWrap = widget.element.querySelectorAll('.iframe-wrapper');
+      if(iframeWrap.length){
+        iframeWrap[0].setAttribute('class', '');
+        iframeWrap[0].setAttribute('style', '');
+      }
+
+		};
+
+    // Listen to message from embed iframe window
+    bindEvent(window, 'message', function (e){
+      if(e.origin == widget.baseOrigin){
+        var o = e.data;
+        if (o.eventName == 'updateHeight'){
+					console.log(o.data);
+          widget.setIframeHeight(o.data);
+        }
+      }
+    });
+  };
+
+  // Get Sections
+  ResultsDashboardWidget.prototype.getSections = function getSections () {
+    return ("[&quot;home&quot;,&quot;geographicScope&quot;,&quot;geographicScope&quot;,&quot;partners&quot;,&quot;SDG&quot;,&quot;systemLevelOutcomes&quot;,&quot;systemLevelOutcomes&quot;,&quot;caseReports&quot;,&quot;innovations&quot;,&quot;policies&quot;,&quot;milestones&quot;,&quot;partnerships&quot;,&quot;capDev&quot;,&quot;altmetric&quot;,&quot;publications&quot;,&quot;MELIA&quot;,&quot;genebanks&quot;,&quot;glossary&quot;,&quot;ethiopia&quot;]").replace(/&quot;/g,'"');
+  };
+
+  // Update Element Height
+  ResultsDashboardWidget.prototype.setIframeHeight = function setIframeHeight (height) {
+    this.iframe.style.height = (height - 7) +"px";
+  };
+
+  function sendIframeMessage(iframe, msg){
+    iframe.contentWindow.postMessage(msg, "*");
+  }
+
+  function bindEvent(element, eventName, eventHandler) {
+    if (element.addEventListener){
+        element.addEventListener(eventName, eventHandler, false);
+    } else if (element.attachEvent) {
+        element.attachEvent('on' + eventName, eventHandler);
+    }
+  }
+
+  function unBindEvent(element, eventName, eventHandler) {
+    if (element.removeEventListener) {
+      element.removeEventListener(eventName, eventHandler);
+    } else if (x.detachEvent) {
+      element.detachEvent(eventName, eventHandler);
+    }
+  }
+
+  return ResultsDashboardWidget;
+})));
+}).call(this);

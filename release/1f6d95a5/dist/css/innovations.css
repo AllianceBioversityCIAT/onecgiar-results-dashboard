@@ -1,0 +1,24 @@
+.istage-container {
+  height: 300px;
+}
+
+.itype-container {
+  height: 380px;
+}
+
+.imap-container {
+  height: 380px;
+}
+
+.ilist-container {
+  height: 500px;
+}
+
+.no-data {
+  font-size: 1.05em;
+  font-family: 'Montserrat', sans-serif;
+  color: #716f6f;
+  padding-top: 30%;
+  position: relative;
+  text-align: center;
+}

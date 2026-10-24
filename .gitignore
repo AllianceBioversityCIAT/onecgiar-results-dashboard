@@ -5,3 +5,4 @@ artifacts/
 reports/
 .cache/
 *.log
+!release/**/dist/
