@@ -1,0 +1,1081 @@
+{
+ "version": 1,
+ "note": "Maps every AC-L, FR and NFR to tests and report keys (tasks.md section 4 owners). unit refs: file + title regex (the junit report has no file attribute, so the file scopes titles statically). e2e refs: Playwright file + title regex. AC-L rows aggregate their FR/NFR rows (requirements.md AC-L table).",
+ "criteria": [
+  {
+   "id": "AC-L01",
+   "kind": "AC-L",
+   "title": "Clean copy, no PHP: npm ci and npm run build succeed",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "criteria",
+     "ids": [
+      "FR-02",
+      "FR-18",
+      "NFR-01",
+      "NFR-02"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "AC-L02",
+   "kind": "AC-L",
+   "title": "Reproducible build (identical dist/ hashes)",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "criteria",
+     "ids": [
+      "FR-02"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "AC-L03",
+   "kind": "AC-L",
+   "title": "resultsDashboard-prod/ unchanged; migrated code separate",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "criteria",
+     "ids": [
+      "FR-01"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "AC-L04",
+   "kind": "AC-L",
+   "title": "dist/ has no .php, .twig, composer.*, settings.php or secrets",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "criteria",
+     "ids": [
+      "FR-03"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "AC-L05",
+   "kind": "AC-L",
+   "title": "npm run serve serves dist/ without PHP; routing statuses",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "criteria",
+     "ids": [
+      "FR-13",
+      "FR-20",
+      "NFR-05"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "AC-L06",
+   "kind": "AC-L",
+   "title": "No static resource 404; no self-hosted CDN requests",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "criteria",
+     "ids": [
+      "FR-17",
+      "FR-19",
+      "FR-22"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "AC-L07",
+   "kind": "AC-L",
+   "title": "Runtime parameter scripts unit-tested",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "criteria",
+     "ids": [
+      "FR-07",
+      "FR-09",
+      "FR-21"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "AC-L08",
+   "kind": "AC-L",
+   "title": "Tableau views requested with the correct Year",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "criteria",
+     "ids": [
+      "FR-06"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "AC-L09",
+   "kind": "AC-L",
+   "title": "Year/CRP filters",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "criteria",
+     "ids": [
+      "FR-08"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "AC-L10",
+   "kind": "AC-L",
+   "title": "Embed mode",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "criteria",
+     "ids": [
+      "FR-11"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "AC-L11",
+   "kind": "AC-L",
+   "title": "Widget on another origin",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "criteria",
+     "ids": [
+      "FR-12"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "AC-L12",
+   "kind": "AC-L",
+   "title": "Glossary",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "criteria",
+     "ids": [
+      "FR-10"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "AC-L13",
+   "kind": "AC-L",
+   "title": "Comparison against R1/R2/R3, differences classified",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "criteria",
+     "ids": [
+      "FR-23",
+      "NFR-08"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "AC-L14",
+   "kind": "AC-L",
+   "title": "README repeatable from a clean folder",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "criteria",
+     "ids": [
+      "FR-24"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "AC-L15",
+   "kind": "AC-L",
+   "title": "Localhost limitations and AWS-pending tests listed",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "criteria",
+     "ids": [
+      "FR-25",
+      "FR-26",
+      "FR-27"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "FR-01",
+   "kind": "FR",
+   "title": "Migrated code separate from the original",
+   "class": "LOCAL",
+   "command": "npm test",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "original.test.mjs",
+     "min": 1
+    },
+    {
+     "type": "manual",
+     "note": "T-19: before/after hash manifest of resultsDashboard-prod/ (no writes to the original)"
+    }
+   ]
+  },
+  {
+   "id": "FR-02",
+   "kind": "FR",
+   "title": "Reproducible build without a PHP runtime",
+   "class": "LOCAL",
+   "command": "npm test",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "build.test.mjs",
+     "match": "FR-02|determinism",
+     "min": 1
+    },
+    {
+     "type": "unit",
+     "file": "no-php.test.mjs",
+     "match": "output:",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-03",
+   "kind": "FR",
+   "title": "Artifact hygiene",
+   "class": "LOCAL",
+   "command": "npm test",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "build.test.mjs",
+     "match": "FR-03|hygiene|excludeAssets",
+     "min": 1
+    },
+    {
+     "type": "unit",
+     "file": "no-php.test.mjs",
+     "match": "output:",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-04",
+   "kind": "FR",
+   "title": "Environment-independent artifact",
+   "class": "LOCAL",
+   "command": "npm test; npm run test:e2e",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "build.test.mjs",
+     "match": "FR-04|BUILD_OUT_DIR",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "routes.spec.mjs",
+     "match": "two origins|names neither localhost",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "widget.spec.mjs",
+     "match": "second origin",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-05",
+   "kind": "FR",
+   "title": "The 17 sections",
+   "class": "LOCAL",
+   "command": "npm test; npm run test:e2e; npm run compare",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "site.test.mjs",
+     "match": "sections: 19|crps: 17",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "sections.spec.mjs",
+     "match": "renders header, menu",
+     "min": 1
+    },
+    {
+     "type": "compare",
+     "rule": "r1"
+    }
+   ]
+  },
+  {
+   "id": "FR-06",
+   "kind": "FR",
+   "title": "Tableau visualizations",
+   "class": "TABLEAU",
+   "command": "npm test; npm run test:e2e",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "tableau-views.test.mjs",
+     "min": 1
+    },
+    {
+     "type": "unit",
+     "file": "site.test.mjs",
+     "match": "tableauViews",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "tableau-request.spec.mjs",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "tableau-render.spec.mjs",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-07",
+   "kind": "FR",
+   "title": "URL parameter resolution in the browser",
+   "class": "LOCAL",
+   "command": "npm test; npm run test:e2e; npm run compare",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "params.test.mjs",
+     "match": "FR-07|appConfig|hostile|golden",
+     "min": 1
+    },
+    {
+     "type": "unit",
+     "file": "legacy-compat.test.mjs",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "security.spec.mjs",
+     "match": "hostile|stay literal|script URL",
+     "min": 1
+    },
+    {
+     "type": "compare",
+     "rule": "r1"
+    }
+   ]
+  },
+  {
+   "id": "FR-08",
+   "kind": "FR",
+   "title": "Year and CRP filters",
+   "class": "LOCAL / TABLEAU",
+   "command": "npm test; npm run test:e2e",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "params.test.mjs",
+     "match": "^apply:",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "filters.spec.mjs",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-09",
+   "kind": "FR",
+   "title": "Partnerships variant selection",
+   "class": "LOCAL",
+   "command": "npm test",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "routing.test.mjs",
+     "match": "partnerships year=",
+     "min": 1
+    },
+    {
+     "type": "unit",
+     "file": "build.test.mjs",
+     "match": "partnerships variants",
+     "min": 1
+    },
+    {
+     "type": "unit",
+     "file": "compare-independence.test.mjs",
+     "match": "partnerships picks",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-10",
+   "kind": "FR",
+   "title": "Glossary",
+   "class": "LOCAL",
+   "command": "npm run test:e2e",
+   "refs": [
+    {
+     "type": "e2e",
+     "file": "glossary.spec.mjs",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-11",
+   "kind": "FR",
+   "title": "Embed mode",
+   "class": "LOCAL",
+   "command": "npm test; npm run test:e2e",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "params.test.mjs",
+     "match": "embed",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "embed.spec.mjs",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-12",
+   "kind": "FR",
+   "title": "Widget /widget/main.js",
+   "class": "LOCAL",
+   "command": "npm test; npm run test:e2e",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "templates.test.mjs",
+     "match": "widget",
+     "min": 1
+    },
+    {
+     "type": "unit",
+     "file": "build.test.mjs",
+     "match": "widget/main.js",
+     "min": 1
+    },
+    {
+     "type": "unit",
+     "file": "twig-semantics.test.mjs",
+     "match": "sectionsJson",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "widget.spec.mjs",
+     "min": 1
+    }
+   ],
+   "awsPending": [
+    "Widget on a real host in AWS (class AWS)"
+   ]
+  },
+  {
+   "id": "FR-13",
+   "kind": "FR",
+   "title": "Routing rules",
+   "class": "LOCAL",
+   "command": "npm test; npm run test:e2e",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "routing.test.mjs",
+     "match": "case |invariant|section /|legacy /|V-1",
+     "min": 1
+    },
+    {
+     "type": "unit",
+     "file": "serve.test.mjs",
+     "match": "rules server",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "routes.spec.mjs",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-14",
+   "kind": "FR",
+   "title": "Single source of rules (local/edge parity)",
+   "class": "LOCAL",
+   "command": "npm test",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "edge-parity.test.mjs",
+     "min": 1
+    },
+    {
+     "type": "unit",
+     "file": "edge-constraints.test.mjs",
+     "match": "DD-19|DD-20",
+     "min": 1
+    }
+   ],
+   "awsPending": [
+    "Real CloudFront Functions runtime and CloudFront parity"
+   ]
+  },
+  {
+   "id": "FR-15",
+   "kind": "FR",
+   "title": "Canonical host",
+   "class": "LOCAL",
+   "command": "npm test; npm run test:e2e",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "routing.test.mjs",
+     "match": "FR-15|edge-only",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "routes.spec.mjs",
+     "match": "canonical-host",
+     "min": 1
+    }
+   ],
+   "awsPending": [
+    "Real canonical host, HTTPS and HSTS"
+   ]
+  },
+  {
+   "id": "FR-16",
+   "kind": "FR",
+   "title": "Removals",
+   "class": "LOCAL",
+   "command": "npm test; npm run test:e2e",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "templates.test.mjs",
+     "match": "no inline appConfig",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "sections.spec.mjs",
+     "match": "no server-interpolated",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-17",
+   "kind": "FR",
+   "title": "Self-hosted third-party resources",
+   "class": "LOCAL",
+   "command": "npm test; npm run test:e2e",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "build.test.mjs",
+     "match": "FR-17",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "sections.spec.mjs",
+     "match": "webfonts|renders header, menu",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-18",
+   "kind": "FR",
+   "title": "npm ci",
+   "class": "LOCAL",
+   "command": "npm test",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "no-php.test.mjs",
+     "match": "package",
+     "min": 1
+    },
+    {
+     "type": "manual",
+     "note": "T-18: clean-folder `npm ci` log and no-PHP shell check"
+    }
+   ]
+  },
+  {
+   "id": "FR-19",
+   "kind": "FR",
+   "title": "npm run build",
+   "class": "LOCAL",
+   "command": "npm test",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "build.test.mjs",
+     "match": "FR-19|refgraph",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-20",
+   "kind": "FR",
+   "title": "npm run serve",
+   "class": "LOCAL",
+   "command": "npm test; npm run test:e2e",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "serve.test.mjs",
+     "match": "FR-20|raw-socket|port in use|loopback|PORT",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "routes.spec.mjs",
+     "match": "outside dist|directory listing",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-21",
+   "kind": "FR",
+   "title": "npm test",
+   "class": "LOCAL",
+   "command": "npm test",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "params.test.mjs",
+     "match": "FR-07",
+     "min": 1
+    },
+    {
+     "type": "unit",
+     "file": "routing.test.mjs",
+     "match": "case ",
+     "min": 1
+    },
+    {
+     "type": "unit",
+     "file": "build.test.mjs",
+     "match": "FR-02",
+     "min": 1
+    },
+    {
+     "type": "unit",
+     "file": "build-time.test.mjs",
+     "min": 1
+    },
+    {
+     "type": "unit",
+     "file": "tableau-views.test.mjs",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-22",
+   "kind": "FR",
+   "title": "npm run test:e2e",
+   "class": "LOCAL",
+   "command": "npm run test:e2e",
+   "refs": [
+    {
+     "type": "e2e-class",
+     "class": "LOCAL"
+    }
+   ]
+  },
+  {
+   "id": "FR-23",
+   "kind": "FR",
+   "title": "npm run compare",
+   "class": "PROD-RO",
+   "command": "npm run compare",
+   "refs": [
+    {
+     "type": "compare",
+     "rule": "r1"
+    },
+    {
+     "type": "compare",
+     "rule": "r2"
+    },
+    {
+     "type": "compare",
+     "rule": "r3"
+    },
+    {
+     "type": "compare",
+     "rule": "limits"
+    },
+    {
+     "type": "unit",
+     "file": "compare-independence.test.mjs",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-24",
+   "kind": "FR",
+   "title": "PowerShell README",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "manual",
+     "note": "T-18: README followed from a clean folder in powershell.exe 5.1 and pwsh 7 (human review)"
+    }
+   ]
+  },
+  {
+   "id": "FR-25",
+   "kind": "FR",
+   "title": "Execution evidence",
+   "class": "LOCAL",
+   "command": "npm test",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "evidence.test.mjs",
+     "match": "status|NOT RUN|PASSED|FAILED|BLOCKED|AWS",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-26",
+   "kind": "FR",
+   "title": "Local validation report (E-06)",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "manual",
+     "note": "T-19: evidence/validation-report.md"
+    }
+   ]
+  },
+  {
+   "id": "FR-27",
+   "kind": "FR",
+   "title": "Test classification",
+   "class": "LOCAL",
+   "command": "npm run test:e2e",
+   "refs": [
+    {
+     "type": "rule",
+     "rule": "fr27"
+    }
+   ]
+  },
+  {
+   "id": "FR-28",
+   "kind": "FR",
+   "title": "No impact on production systems",
+   "class": "LOCAL",
+   "command": "npm run test:e2e",
+   "refs": [
+    {
+     "type": "e2e",
+     "file": "network.spec.mjs",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "FR-29",
+   "kind": "FR",
+   "title": "No PHP and no application backend",
+   "class": "LOCAL",
+   "command": "npm test; npm run test:e2e",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "no-php.test.mjs",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "static-server.spec.mjs",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "network.spec.mjs",
+     "min": 1
+    },
+    {
+     "type": "manual",
+     "note": "T-18: no-PHP shell check (Get-Command php, where.exe php) next to npm ci/build/serve; T-19: manifest hash recorded for Phase 4"
+    }
+   ]
+  },
+  {
+   "id": "NFR-01",
+   "kind": "NFR",
+   "title": "Windows compatibility",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "manual",
+     "note": "T-18: shell evidence in powershell.exe 5.1 and pwsh 7 (NOT RUN when pwsh is absent)"
+    }
+   ]
+  },
+  {
+   "id": "NFR-02",
+   "kind": "NFR",
+   "title": "Node version",
+   "class": "LOCAL",
+   "command": "npm test",
+   "refs": [
+    {
+     "type": "rule",
+     "rule": "node-engines"
+    }
+   ]
+  },
+  {
+   "id": "NFR-03",
+   "kind": "NFR",
+   "title": "Minimal dependencies",
+   "class": "LOCAL",
+   "command": "npm test",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "no-php.test.mjs",
+     "match": "package",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "NFR-04",
+   "kind": "NFR",
+   "title": "Build time",
+   "class": "LOCAL",
+   "command": "npm test",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "build-time.test.mjs",
+     "min": 1
+    },
+    {
+     "type": "rule",
+     "rule": "build-time"
+    }
+   ]
+  },
+  {
+   "id": "NFR-05",
+   "kind": "NFR",
+   "title": "Case sensitivity",
+   "class": "LOCAL",
+   "command": "npm test; npm run test:e2e",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "serve.test.mjs",
+     "match": "NFR-05|case sensitivity",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "routes.spec.mjs",
+     "match": "case-sensitive",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "NFR-06",
+   "kind": "NFR",
+   "title": "Emulated headers",
+   "class": "LOCAL",
+   "command": "npm test; npm run test:e2e",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "serve.test.mjs",
+     "match": "NFR-06",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "security.spec.mjs",
+     "match": "headers on a page|response splitting|Report-Only",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "NFR-07",
+   "kind": "NFR",
+   "title": "CloudFront Functions compatibility",
+   "class": "LOCAL",
+   "command": "npm test",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "edge-constraints.test.mjs",
+     "min": 1
+    }
+   ],
+   "awsPending": [
+    "Real cloudfront-js-2.0 runtime"
+   ]
+  },
+  {
+   "id": "NFR-08",
+   "kind": "NFR",
+   "title": "Visual parity",
+   "class": "PROD-RO",
+   "command": "npm run compare",
+   "refs": [
+    {
+     "type": "compare",
+     "rule": "r2"
+    },
+    {
+     "type": "manual",
+     "note": "G2: side-by-side human review of reports/compare/r2-home.html"
+    }
+   ]
+  },
+  {
+   "id": "NFR-09",
+   "kind": "NFR",
+   "title": "Local server security",
+   "class": "LOCAL",
+   "command": "npm test; npm run test:e2e",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "serve.test.mjs",
+     "match": "NFR-09|FR-20|raw-socket|binds loopback|directory",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "routes.spec.mjs",
+     "match": "outside dist",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "NFR-10",
+   "kind": "NFR",
+   "title": "Traceability",
+   "class": "LOCAL",
+   "command": "npm test",
+   "refs": [
+    {
+     "type": "unit",
+     "file": "evidence.test.mjs",
+     "match": "traceability",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "NFR-11",
+   "kind": "NFR",
+   "title": "No new telemetry",
+   "class": "LOCAL",
+   "command": "npm run test:e2e",
+   "refs": [
+    {
+     "type": "e2e",
+     "file": "network.spec.mjs",
+     "min": 1
+    },
+    {
+     "type": "e2e",
+     "file": "sections.spec.mjs",
+     "match": "renders header, menu",
+     "min": 1
+    }
+   ]
+  },
+  {
+   "id": "NFR-12",
+   "kind": "NFR",
+   "title": "Language",
+   "class": "LOCAL",
+   "command": "npm run evidence",
+   "refs": [
+    {
+     "type": "manual",
+     "note": "Review of every task (English-only code, documents and evidence)"
+    }
+   ]
+  }
+ ]
+}

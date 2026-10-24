@@ -10,7 +10,8 @@
   "scripts": {
     "build": "node scripts/build.mjs",
     "serve": "node scripts/serve.mjs",
-    "test": "node --test --test-concurrency=1 \"tests/unit/*.test.mjs\"",
+    "pretest": "node -e \"process.getBuiltinModule('fs').mkdirSync('reports',{recursive:true})\"",
+    "test": "node --test --test-concurrency=1 --test-reporter=spec --test-reporter-destination=stdout --test-reporter=junit --test-reporter-destination=reports/unit.xml \"tests/unit/*.test.mjs\"",
     "test:e2e": "playwright test",
     "compare": "node scripts/compare.mjs",
     "evidence": "node scripts/evidence.mjs"
