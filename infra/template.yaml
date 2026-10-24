@@ -1,0 +1,761 @@
+# Results Dashboard stack (design.md 5-7). Human-edited source. `npm run build:infra` writes
+# infra/template.yaml from this file; do not edit the generated file (a test fails when it is stale).
+#
+# Generator placeholders (scripts/build-infra.mjs):
+#   __RD_EDGE_CODE__  the edge function source, inlined under Fn::Sub (only ${CanonicalHost} is substituted)
+#   the CSP placeholder in HeadersPolicy: the report-only CSP, read from scripts/serve.mjs (SECURITY_HEADERS), so AWS and local match
+#
+# Settled premises (T-03, 2026-10-24; quotes fetched from the documentation on that date):
+#
+# P-22  `sam deploy` artifact bucket and the direct-upload limit.
+#   Source: https://docs.aws.amazon.com/serverless-application-model/latest/developerguide/sam-cli-command-reference-sam-deploy.html
+#     "If your template is larger than 51,200 bytes, then either the `--s3-bucket` option or the `--resolve-s3` option is required."
+#   Source: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cloudformation-limits.html
+#     Quota "Template body size in a request": "The maximum size of a template body that you can pass in a `CreateStack`, `UpdateStack`, or `ValidateTemplate` request." Value: 51,200 bytes.
+#   Outcome: the direct limit is 51,200 bytes. The generated template is kept below it (the generator and a test
+#   enforce this), and this template has no local artifacts (no Code/ContentUri), so no bucket is needed by size.
+#   UNVERIFIED - confirm at source before relying on it: that `sam deploy` needs no artifact bucket at all for a
+#   template without local artifacts (the pages quoted above state the size condition only, not the absence of
+#   other conditions). Fallback if the first deploy asks for a bucket: a pre-created, tagged deployment bucket.
+#   UNVERIFIED - confirm at source before relying on it: that `sam deploy` accepts a template without the
+#   `Transform: AWS::Serverless-2016-10-31` line. This template uses no SAM resource types, so the line is omitted.
+#
+# P-26  `MinimumProtocolVersion` with the default certificate.
+#   Source: https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-properties-cloudfront-distribution-viewercertificate.html
+#     "If the distribution uses the CloudFront domain name such as `d111111abcdef8.cloudfront.net` (you set `CloudFrontDefaultCertificate` to `true`), CloudFront automatically sets the security policy to `TLSv1` regardless of the value that you set here."
+#     "If the distribution uses the CloudFront domain name such as `d111111abcdef8.cloudfront.net`, set this field to `true`." (property CloudFrontDefaultCertificate)
+#   Outcome: the value is ignored (not forbidden) with the default certificate and CloudFront applies TLSv1 on
+#   *.cloudfront.net. The default branch therefore sets only CloudFrontDefaultCertificate. TLSv1.2_2021 is set only
+#   when HasCustomDomain. The TLS floor on the default domain is AWS-managed and cannot be raised (accepted, DD-02).
+#
+# Other unverified facts used below:
+#   UNVERIFIED - confirm at source before relying on it: an empty-string Output Value is accepted by CloudFormation
+#   (the Outputs page quoted in T-03 is silent). Fallback: attach a Condition to the three optional outputs.
+#   UNVERIFIED - confirm at source before relying on it: CloudFront legacy log delivery still writes to a bucket whose
+#   policy denies aws:SecureTransport=false. S2 validation must confirm that log files arrive under <env>/.
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Results Dashboard static site - private S3 origin, CloudFront distribution, edge function (one stack per environment)
+
+Parameters:
+  Environment:
+    Type: String
+    AllowedValues: [test, prod]
+    Description: Environment name; used in names and tags.
+  PriceClass:
+    Type: String
+    Default: PriceClass_100
+    AllowedValues: [PriceClass_100, PriceClass_200, PriceClass_All]
+  EnableAccessLogs:
+    Type: String
+    Default: 'true'
+    AllowedValues: ['true', 'false']
+    Description: Create the private log bucket and enable CloudFront standard (legacy) logging.
+  LogRetentionDays:
+    Type: Number
+    Default: 30
+    MinValue: 1
+    Description: Days after which log objects expire.
+  Indexing:
+    Type: String
+    Default: deny
+    AllowedValues: [allow, deny]
+    Description: "deny adds X-Robots-Tag: noindex, nofollow."
+  PublisherPrincipalArn:
+    Type: String
+    Default: ''
+    AllowedPattern: '^$|^arn:aws:iam::[0-9]{12}:(user|role)/.+$'
+    Description: IAM user or role allowed to assume the publisher role. Empty skips the role.
+  BudgetLimitUsd:
+    Type: Number
+    Default: 0
+    MinValue: 0
+    Description: Monthly cost budget in USD. 0 disables the budget.
+  BudgetEmail:
+    Type: String
+    Default: ''
+    AllowedPattern: '^$|^[^@\s]+@[^@\s]+\.[^@\s]+$'
+    Description: Budget alert recipient. Given at deploy time; never committed.
+  AlternateDomainName:
+    Type: String
+    Default: ''
+    MaxLength: 253
+    AllowedPattern: '^[A-Za-z0-9.-]*$'
+    Description: Institutional host name, or empty (default) to use the *.cloudfront.net name.
+  CertificateArn:
+    Type: String
+    Default: ''
+    AllowedPattern: '^$|^arn:aws:acm:us-east-1:[0-9]{12}:certificate/[0-9A-Za-z-]+$'
+    Description: Existing ACM certificate in us-east-1 for AlternateDomainName, or empty (default).
+  CanonicalHost:
+    Type: String
+    Default: ''
+    MaxLength: 253
+    AllowedPattern: '^[A-Za-z0-9.-]*$'
+    Description: Host every other host is redirected to (routing rule 1), or empty (default) for no redirect. It is inlined in the edge code, hence the strict pattern.
+
+Conditions:
+  HasCustomDomain: !And
+    - !Not [!Equals [!Ref AlternateDomainName, '']]
+    - !Not [!Equals [!Ref CertificateArn, '']]
+  EnableLogging: !Equals [!Ref EnableAccessLogs, 'true']
+  HasPublisher: !Not [!Equals [!Ref PublisherPrincipalArn, '']]
+  HasBudget: !Not [!Equals [!Ref BudgetLimitUsd, '0']]
+  HasBudgetEmail: !Not [!Equals [!Ref BudgetEmail, '']]
+  DenyIndexing: !Equals [!Ref Indexing, 'deny']
+
+Rules:
+  # DD-09
+  DomainAndCertificateTogether:
+    Assertions:
+      - Assert: !Or
+          - !And
+            - !Equals [!Ref AlternateDomainName, '']
+            - !Equals [!Ref CertificateArn, '']
+          - !And
+            - !Not [!Equals [!Ref AlternateDomainName, '']]
+            - !Not [!Equals [!Ref CertificateArn, '']]
+        AssertDescription: AlternateDomainName and CertificateArn must be set together or both left empty.
+  CanonicalHostIsTheAlias:
+    Assertions:
+      - Assert: !Or
+          - !Equals [!Ref CanonicalHost, '']
+          - !And
+            - !Not [!Equals [!Ref AlternateDomainName, '']]
+            - !Not [!Equals [!Ref CertificateArn, '']]
+            - !Equals [!Ref CanonicalHost, !Ref AlternateDomainName]
+        AssertDescription: CanonicalHost requires a custom domain and must equal AlternateDomainName.
+
+Resources:
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      VersioningConfiguration:
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireNoncurrentVersions
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 90
+      Tags:
+        - Key: Project
+          Value: results-dashboard
+        - Key: Environment
+          Value: !Ref Environment
+
+  SiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          # Read only through this distribution. No s3:ListBucket on purpose (DD-08): a missing key gives 403,
+          # which the distribution maps to the 404 page.
+          - Sid: AllowCloudFrontGetObject
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub '${SiteBucket.Arn}/*'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${Distribution}'
+          # Effect Deny: the wildcard action only ever removes access (audits must scope wildcard checks to Allow).
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !GetAtt SiteBucket.Arn
+              - !Sub '${SiteBucket.Arn}/*'
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+
+  LogBucket:
+    Type: AWS::S3::Bucket
+    Condition: EnableLogging
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      # Legacy standard logging needs ACLs enabled (P-15, DD-07); this is the only bucket that has them.
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerPreferred
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireLogs
+            Status: Enabled
+            Prefix: !Sub '${Environment}/'
+            ExpirationInDays: !Ref LogRetentionDays
+      Tags:
+        - Key: Project
+          Value: results-dashboard
+        - Key: Environment
+          Value: !Ref Environment
+
+  LogBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Condition: EnableLogging
+    Properties:
+      Bucket: !Ref LogBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: DenyInsecureTransport
+            Effect: Deny
+            Principal: '*'
+            Action: 's3:*'
+            Resource:
+              - !GetAtt LogBucket.Arn
+              - !Sub '${LogBucket.Arn}/*'
+            Condition:
+              Bool:
+                aws:SecureTransport: 'false'
+
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${AWS::StackName}-oac'
+        Description: Signed access from the distribution to the private site bucket
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  HtmlCachePolicy:
+    Type: AWS::CloudFront::CachePolicy
+    Properties:
+      CachePolicyConfig:
+        Name: !Sub '${AWS::StackName}-html'
+        Comment: Short TTL for HTML and the widget; query strings are not part of the cache key
+        MinTTL: 0
+        DefaultTTL: 300
+        MaxTTL: 3600
+        ParametersInCacheKeyAndForwardedToOrigin:
+          EnableAcceptEncodingGzip: true
+          EnableAcceptEncodingBrotli: true
+          CookiesConfig:
+            CookieBehavior: none
+          HeadersConfig:
+            HeaderBehavior: none
+          QueryStringsConfig:
+            QueryStringBehavior: none
+
+  HeadersPolicy:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub '${AWS::StackName}-headers'
+        Comment: Security headers; framing is not restricted because the widget is embedded from other origins
+        SecurityHeadersConfig:
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 31536000
+            IncludeSubdomains: false
+            Preload: false
+            Override: true
+          ContentTypeOptions:
+            Override: true
+          ReferrerPolicy:
+            ReferrerPolicy: strict-origin-when-cross-origin
+            Override: true
+        CustomHeadersConfig:
+          Items:
+            - Header: Content-Security-Policy-Report-Only
+              Value: "default-src 'self'; frame-src 'self' https://tableau-core.cgiar.org https://public.tableau.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com"
+              Override: true
+            - !If
+              - DenyIndexing
+              - Header: X-Robots-Tag
+                Value: noindex, nofollow
+                Override: true
+              - !Ref AWS::NoValue
+
+  EdgeFunction:
+    Type: AWS::CloudFront::Function
+    Properties:
+      Name: !Sub '${AWS::StackName}-edge'
+      AutoPublish: true
+      FunctionConfig:
+        Comment: Results Dashboard URL rewrite and optional canonical host redirect
+        Runtime: cloudfront-js-2.0
+      FunctionCode:
+        Fn::Sub: |
+          function isNumericYear(v) {
+            return typeof v === 'string' &&
+              /^[ \t\n\r\v\f]*[+-]?(\d+(\.\d*)?|\.\d+)([eE][+-]?\d+)?[ \t\n\r\v\f]*$/.test(v);
+          }
+          function yearAfter2017(v) {
+            return isNumericYear(v) && Number(v) > 2017;
+          }
+          var RD_CANONICAL_HOST = '${CanonicalHost}';
+          function rulesHas(obj, key) {
+            return Object.prototype.hasOwnProperty.call(obj, key);
+          }
+          function rulesIsSection(name) {
+            var list = RD_DATA.sections;
+            for (var i = 0; i < list.length; i++) {
+              if (list[i] === name) { return true; }
+            }
+            return false;
+          }
+          function rulesParam(params, key) {
+            return params && rulesHas(params, key) ? params[key] : null;
+          }
+          function rulesHex2(code) {
+            var h = code.toString(16).toUpperCase();
+            return h.length < 2 ? '0' + h : h;
+          }
+          function rulesBadPath(path) {
+            if (typeof path !== 'string' || path.length === 0 || path.charAt(0) !== '/') { return true; }
+            for (var i = 0; i < path.length; i++) {
+              var c = path.charCodeAt(i);
+              if (c < 0x21 || c > 0x7e) { return true; }
+              if (c === 0x23 || c === 0x5e || c === 0x7c) { return true; }
+            }
+            var decoded;
+            try {
+              decoded = decodeURIComponent(path);
+            } catch (e) {
+              return true;
+            }
+            return decoded.indexOf('\u0000') !== -1;
+          }
+          function rulesTraversal(path) {
+            if (path.indexOf('//') === 0 || path.indexOf('\\') !== -1) { return true; }
+            if (/%2f|%5c/i.test(path)) { return true; }
+            var segs = path.split('/');
+            for (var i = 0; i < segs.length; i++) {
+              var d = decodeURIComponent(segs[i]);
+              if (d === '.' || d === '..') { return true; }
+            }
+            return false;
+          }
+          function rulesHtmlSection(name) {
+            if (name.length <= 5 || name.substring(name.length - 5) !== '.html') { return null; }
+            var base = name.substring(0, name.length - 5);
+            if (base.length > 13 && base.substring(base.length - 13) === '--embed-nonav') {
+              base = base.substring(0, base.length - 13);
+            } else if (base.length > 7 && base.substring(base.length - 7) === '--embed') {
+              base = base.substring(0, base.length - 7);
+            }
+            return rulesIsSection(base) ? base : null;
+          }
+          function rulesMapName(name) {
+            if (name === 'action') { return '/'; }
+            if (rulesHas(RD_DATA.legacyRedirects, name)) { return RD_DATA.legacyRedirects[name]; }
+            var section = rulesHtmlSection(name);
+            return section === null ? null : '/' + section;
+          }
+          function rulesEncodePath(path) {
+            return path.replace(/["<>`{}]/g, function (ch) {
+              return '%' + rulesHex2(ch.charCodeAt(0));
+            });
+          }
+          function rulesEncodeQuery(query) {
+            var out = '';
+            for (var i = 0; i < query.length; i++) {
+              var c = query.charCodeAt(i);
+              if (c < 0x21 || c === 0x7f || c === 0x23) {
+                out += '%' + rulesHex2(c);
+              } else if (c > 0x7f) {
+                if (c >= 0xd800 && c <= 0xdbff && i + 1 < query.length &&
+                    query.charCodeAt(i + 1) >= 0xdc00 && query.charCodeAt(i + 1) <= 0xdfff) {
+                  out += encodeURIComponent(query.substring(i, i + 2));
+                  i++;
+                } else if (c >= 0xd800 && c <= 0xdfff) {
+                  out += '%EF%BF%BD';
+                } else {
+                  out += encodeURIComponent(query.charAt(i));
+                }
+              } else {
+                out += query.charAt(i);
+              }
+            }
+            return out;
+          }
+          function rulesTerminalTarget(rawPath, query) {
+            var p = rawPath.replace(/\/+$/, '');
+            var target;
+            if (p === '') {
+              target = '/';
+            } else {
+              target = null;
+              if (p.indexOf('/', 1) === -1) {
+                target = rulesMapName(decodeURIComponent(p.substring(1)));
+              }
+              if (target === null) { target = rulesEncodePath(p); }
+            }
+            return query.length > 0 ? target + '?' + rulesEncodeQuery(query) : target;
+          }
+          function rulesRedirect(location) {
+            return { type: 'redirect', status: 301, location: location };
+          }
+          function rulesVariantFile(name, params) {
+            var base = name;
+            if (name === 'partnerships') {
+              var year = rulesParam(params, 'year');
+              if (year !== null && !yearAfter2017(year)) { base = 'partnerships-2017'; }
+            }
+            var suffix = '';
+            if (rulesParam(params, 'embed') === 'true') {
+              suffix = rulesParam(params, 'displayNav') === 'true' ? '--embed' : '--embed-nonav';
+            }
+            return { type: 'rewrite', status: 200, file: base + suffix + '.html' };
+          }
+          function resolve(request, mode) {
+            var path = request.path;
+            var query = typeof request.query === 'string' ? request.query : '';
+            if (rulesBadPath(path)) { return { type: 'badRequest', status: 400 }; }
+            if (rulesTraversal(path)) { return { type: 'notFound', status: 404 }; }
+            if (mode === 'edge' && RD_CANONICAL_HOST !== '' && request.host !== RD_CANONICAL_HOST) {
+              return rulesRedirect('https://' + RD_CANONICAL_HOST + rulesTerminalTarget(path, query));
+            }
+            if (request.method !== 'GET' && request.method !== 'HEAD') {
+              return { type: 'methodNotAllowed', status: 405 };
+            }
+            if (path !== '/' && path.charAt(path.length - 1) === '/') {
+              return rulesRedirect(rulesTerminalTarget(path, query));
+            }
+            var decoded = decodeURIComponent(path);
+            if (decoded === '/') { return rulesVariantFile('home', request.params); }
+            var name = decoded.substring(1);
+            if (name.indexOf('/') === -1 && name.indexOf('.') === -1) {
+              if (rulesIsSection(name)) { return rulesVariantFile(name, request.params); }
+              if (rulesMapName(name) !== null) { return rulesRedirect(rulesTerminalTarget(path, query)); }
+              return { type: 'notFound', status: 404 };
+            }
+            if (name.substring(name.length - 5) === '.html') {
+              if (rulesHtmlSection(name) !== null) { return rulesRedirect(rulesTerminalTarget(path, query)); }
+              return { type: 'notFound', status: 404 };
+            }
+            return { type: 'pass' };
+          }
+          var RD_DATA = {"sections":["home","geographicScope","partners","SDG","systemLevelOutcomes","caseReports","innovations","policies","milestones","partnerships","capDev","altmetric","publications","MELIA","genebanks","glossary","ethiopia"],"legacyRedirects":{"homeV1":"/","home-2018V1":"/","insights":"/","test":"/","widget":"/","innovationsV1":"/innovations","innovationsTest":"/innovations","policiesV1":"/policies","publicationsV1":"/publications","altmetricV1":"/altmetric","capDev_V1":"/capDev","caseReportsV1":"/caseReports","milestones-2017":"/milestones","milestones-2018V1":"/milestones","milestonesTest":"/milestones","partnerships-2018":"/partnerships","partnerships-2018V1":"/partnerships","partnersFilter":"/partners","partnersTest":"/partners","systemLevelOutcomesOld":"/systemLevelOutcomes"}};
+          function rdDecode(s) {
+            try {
+              return decodeURIComponent(s.replace(/\+/g, ' '));
+            } catch (e) {
+              return s;
+            }
+          }
+          function rdQueryOf(querystring) {
+            var keys = Object.keys(querystring || {});
+            var parts = [];
+            var params = {};
+            for (var i = 0; i < keys.length; i++) {
+              var entry = querystring[keys[i]];
+              var list = entry.multiValue && entry.multiValue.length > 0 ? entry.multiValue : [entry];
+              for (var j = 0; j < list.length; j++) {
+                parts.push(keys[i] + '=' + list[j].value);
+              }
+              params[rdDecode(keys[i])] = rdDecode(list[list.length - 1].value);
+            }
+            return { query: parts.join('&'), params: params };
+          }
+          function rdResponse(status, description, headers, body) {
+            var response = { statusCode: status, statusDescription: description, headers: headers };
+            if (body) { response.body = body; }
+            return response;
+          }
+          function handler(event) {
+            var request = event.request;
+            var q = rdQueryOf(request.querystring);
+            var host = request.headers && request.headers.host ? request.headers.host.value : '';
+            var result = resolve({
+              method: request.method,
+              host: host,
+              path: request.uri,
+              query: q.query,
+              params: q.params
+            }, 'edge');
+            if (result.type === 'rewrite') {
+              request.uri = '/' + result.file;
+              return request;
+            }
+            if (result.type === 'redirect') {
+              return rdResponse(301, 'Moved Permanently', { location: { value: result.location } });
+            }
+            if (result.type === 'badRequest') {
+              return rdResponse(400, 'Bad Request', { 'content-type': { value: 'text/plain' } }, 'Bad Request');
+            }
+            if (result.type === 'methodNotAllowed') {
+              return rdResponse(405, 'Method Not Allowed',
+                { allow: { value: 'GET, HEAD' }, 'content-type': { value: 'text/plain' } }, 'Method Not Allowed');
+            }
+            if (result.type === 'notFound') {
+              request.uri = '/__rd_not_found__';
+              return request;
+            }
+            return request;
+          }
+      Tags:
+        - Key: Project
+          Value: results-dashboard
+        - Key: Environment
+          Value: !Ref Environment
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      Tags:
+        - Key: Project
+          Value: results-dashboard
+        - Key: Environment
+          Value: !Ref Environment
+      DistributionConfig:
+        Enabled: true
+        Comment: !Sub 'Results Dashboard ${Environment}'
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        PriceClass: !Ref PriceClass
+        # Default: *.cloudfront.net with the default certificate and no aliases (DD-02).
+        Aliases: !If
+          - HasCustomDomain
+          - [!Ref AlternateDomainName]
+          - !Ref AWS::NoValue
+        ViewerCertificate: !If
+          - HasCustomDomain
+          - AcmCertificateArn: !Ref CertificateArn
+            SslSupportMethod: sni-only
+            MinimumProtocolVersion: TLSv1.2_2021
+          - CloudFrontDefaultCertificate: true
+        Logging: !If
+          - EnableLogging
+          - Bucket: !GetAtt LogBucket.DomainName
+            Prefix: !Sub '${Environment}/'
+            IncludeCookies: false
+          - !Ref AWS::NoValue
+        Origins:
+          - Id: site-bucket
+            DomainName: !GetAtt SiteBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: site-bucket
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          CachePolicyId: !Ref HtmlCachePolicy
+          ResponseHeadersPolicyId: !Ref HeadersPolicy
+          FunctionAssociations:
+            - EventType: viewer-request
+              FunctionARN: !GetAtt EdgeFunction.FunctionARN
+        CacheBehaviors:
+          # CachingOptimized (AWS managed, P-18): long TTL, no query strings, no cookies.
+          - PathPattern: /css/*
+            TargetOriginId: site-bucket
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            ResponseHeadersPolicyId: !Ref HeadersPolicy
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !GetAtt EdgeFunction.FunctionARN
+          - PathPattern: /js/*
+            TargetOriginId: site-bucket
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            ResponseHeadersPolicyId: !Ref HeadersPolicy
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !GetAtt EdgeFunction.FunctionARN
+          - PathPattern: /images/*
+            TargetOriginId: site-bucket
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            ResponseHeadersPolicyId: !Ref HeadersPolicy
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !GetAtt EdgeFunction.FunctionARN
+          - PathPattern: /third-party/*
+            TargetOriginId: site-bucket
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            ResponseHeadersPolicyId: !Ref HeadersPolicy
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !GetAtt EdgeFunction.FunctionARN
+          - PathPattern: /fonts/*
+            TargetOriginId: site-bucket
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            ResponseHeadersPolicyId: !Ref HeadersPolicy
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !GetAtt EdgeFunction.FunctionARN
+          - PathPattern: /csv/*
+            TargetOriginId: site-bucket
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6
+            ResponseHeadersPolicyId: !Ref HeadersPolicy
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !GetAtt EdgeFunction.FunctionARN
+          # The widget script changes with releases: short TTL.
+          - PathPattern: /widget/*
+            TargetOriginId: site-bucket
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: !Ref HtmlCachePolicy
+            ResponseHeadersPolicyId: !Ref HeadersPolicy
+            FunctionAssociations:
+              - EventType: viewer-request
+                FunctionARN: !GetAtt EdgeFunction.FunctionARN
+        # Without s3:ListBucket a missing key is a 403 at the origin (P-14); both end as the 404 page.
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 404
+            ResponsePagePath: /404.html
+            ErrorCachingMinTTL: 10
+          - ErrorCode: 404
+            ResponseCode: 404
+            ResponsePagePath: /404.html
+            ErrorCachingMinTTL: 10
+
+  PublisherRole:
+    Type: AWS::IAM::Role
+    Condition: HasPublisher
+    Properties:
+      Description: Uploads the frozen artifact and creates invalidations for this environment only
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !Ref PublisherPrincipalArn
+            Action: sts:AssumeRole
+      # Inline policy only (an IAM managed policy cannot be tagged, DD-04).
+      Policies:
+        - PolicyName: publish-site
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource: !Sub '${SiteBucket.Arn}/*'
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt SiteBucket.Arn
+              - Effect: Allow
+                Action:
+                  - cloudfront:CreateInvalidation
+                  - cloudfront:GetInvalidation
+                Resource: !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${Distribution}'
+              - Effect: Allow
+                Action: cloudformation:DescribeStacks
+                Resource: !Sub 'arn:${AWS::Partition}:cloudformation:${AWS::Region}:${AWS::AccountId}:stack/${AWS::StackName}/*'
+      Tags:
+        - Key: Project
+          Value: results-dashboard
+        - Key: Environment
+          Value: !Ref Environment
+
+  Budget:
+    Type: AWS::Budgets::Budget
+    Condition: HasBudget
+    Properties:
+      Budget:
+        BudgetName: !Sub '${AWS::StackName}-monthly'
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit:
+          Amount: !Ref BudgetLimitUsd
+          Unit: USD
+      # AWS::Budgets::Budget has no Tags property; ResourceTags is its mechanism (FR-13).
+      ResourceTags:
+        - Key: Project
+          Value: results-dashboard
+        - Key: Environment
+          Value: !Ref Environment
+      NotificationsWithSubscribers: !If
+        - HasBudgetEmail
+        - - Notification:
+              NotificationType: ACTUAL
+              ComparisonOperator: GREATER_THAN
+              Threshold: 80
+              ThresholdType: PERCENTAGE
+            Subscribers:
+              - SubscriptionType: EMAIL
+                Address: !Ref BudgetEmail
+          - Notification:
+              NotificationType: ACTUAL
+              ComparisonOperator: GREATER_THAN
+              Threshold: 100
+              ThresholdType: PERCENTAGE
+            Subscribers:
+              - SubscriptionType: EMAIL
+                Address: !Ref BudgetEmail
+        - !Ref AWS::NoValue
+
+Outputs:
+  DistributionId:
+    Description: CloudFront distribution ID (invalidations)
+    Value: !Ref Distribution
+  DistributionArn:
+    Description: CloudFront distribution ARN
+    Value: !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${Distribution}'
+  DistributionDomainName:
+    Description: Default *.cloudfront.net domain name
+    Value: !GetAtt Distribution.DomainName
+  DistributionUrl:
+    Description: Default URL of the site
+    Value: !Sub 'https://${Distribution.DomainName}/'
+  SiteBucketName:
+    Description: Private origin bucket (publishing target)
+    Value: !Ref SiteBucket
+  PublisherRoleArn:
+    Description: Publisher role ARN; empty when no publisher principal is configured
+    Value: !If [HasPublisher, !GetAtt PublisherRole.Arn, '']
+  AlternateDomainName:
+    Description: Configured alternate domain name; empty when unset
+    Value: !Ref AlternateDomainName
+  CanonicalHost:
+    Description: Configured canonical host; empty when unset
+    Value: !Ref CanonicalHost

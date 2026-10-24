@@ -1,0 +1,42 @@
+[
+  {
+    "ParameterKey": "Environment",
+    "ParameterValue": "prod"
+  },
+  {
+    "ParameterKey": "PriceClass",
+    "ParameterValue": "PriceClass_100"
+  },
+  {
+    "ParameterKey": "EnableAccessLogs",
+    "ParameterValue": "true"
+  },
+  {
+    "ParameterKey": "LogRetentionDays",
+    "ParameterValue": "90"
+  },
+  {
+    "ParameterKey": "Indexing",
+    "ParameterValue": "allow"
+  },
+  {
+    "ParameterKey": "PublisherPrincipalArn",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "BudgetLimitUsd",
+    "ParameterValue": "0"
+  },
+  {
+    "ParameterKey": "AlternateDomainName",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "CertificateArn",
+    "ParameterValue": ""
+  },
+  {
+    "ParameterKey": "CanonicalHost",
+    "ParameterValue": ""
+  }
+]

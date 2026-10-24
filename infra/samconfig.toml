@@ -1,0 +1,24 @@
+# SAM CLI configuration (design 7.6). Deploy with:
+#   sam deploy --config-file infra/samconfig.toml --config-env <test|prod> --template-file infra/template.yaml
+# parameter_overrides repeat infra/params/<env>.json for the non-empty values (a test keeps them equal);
+# empty parameters keep the template defaults. BudgetEmail and PublisherPrincipalArn are given on the
+# command line at deploy time and are never committed.
+# No resolve_s3 / s3_bucket: the template has no local artifacts (P-22), so SAM CLI creates no untagged bucket.
+# prod: PriceClass and BudgetLimitUsd are decided at stage S4; the values here are placeholders (budget disabled).
+version = 0.1
+
+[test.deploy.parameters]
+stack_name = "results-dashboard-test"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=test PriceClass=PriceClass_100 EnableAccessLogs=true LogRetentionDays=30 Indexing=deny BudgetLimitUsd=10"
+tags = "Project=results-dashboard Environment=test"
+
+[prod.deploy.parameters]
+stack_name = "results-dashboard-prod"
+region = "us-east-1"
+confirm_changeset = true
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "Environment=prod PriceClass=PriceClass_100 EnableAccessLogs=true LogRetentionDays=90 Indexing=allow BudgetLimitUsd=0"
+tags = "Project=results-dashboard Environment=prod"
