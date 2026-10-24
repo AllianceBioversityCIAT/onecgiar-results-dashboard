@@ -1,7 +1,7 @@
 // Offline infrastructure audit (T-04; FR-12, FR-13, FR-08, FR-10, NFR-01, NFR-06; design 5.2, 5.3, 7.7).
 // Reads infra/tagging.json, the stack template, samconfig.toml and IAM policy documents. No AWS access.
 //   node scripts/audit-infra.mjs [--template <file>] [--samconfig <file>] [--policy <file.json>]...
-// Policy files default to infra/iam/*.json when present (T-05 adds infra/iam/deployer-policy.json).
+// Policy files default to infra/iam/*.json (T-05: infra/iam/deployer-policy.json); "*" resources need a documented exception.
 // Fail-closed: a resource type that is neither taggable nor a documented exception is a violation.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -104,6 +104,19 @@ const statementsIn = (node, acc = []) => {
   }
   return acc;
 };
+// A resource is a wildcard when it is "*" or an ARN whose resource part is only a type token plus "*"
+// segments (distribution/*, changeSet/*/*, or a bare "*"): it matches every resource of that type in the
+// account, so it needs the same documented exception as Resource "*". Name-prefixed patterns such as
+// results-dashboard-* or an S3 <bucket>/* are scoped.
+export const isWideResource = (r) => {
+  if (r === '*') return true;
+  if (typeof r !== 'string' || !r.startsWith('arn:')) return false;
+  const part = r.split(':').slice(5).join(':');
+  if (/^\*(\/\*)*$/.test(part)) return true;
+  // S3 ARNs are bucket[/key]: "<bucket>/*" is scoped to that bucket, not a resource type.
+  return r.split(':')[2] !== 's3' && /^[A-Za-z][A-Za-z0-9-]*(\/\*)+$/.test(part);
+};
+const wideResources = (st) => leaves(st.Resource).filter(isWideResource);
 const READ_ONLY = /^(acm|acm-pca|route53|route53domains):(describe|list|get|check|view)/i;
 const DNS_CERT_SERVICE = /^(acm|acm-pca|route53|route53domains):/i;
 
@@ -121,12 +134,39 @@ export function auditPolicyDocument(doc, source, contract) {
       if (DNS_CERT_SERVICE.test(a) && !READ_ONLY.test(a)) out.push(v('IAM_FORBIDDEN_WRITE', where, `Allow of ${a}: no ACM, ACM PCA, Route 53 or Route 53 Domains write actions (FR-10)`));
     }
     const resources = [...leaves(st.Resource), ...leaves(st.NotResource)];
-    if ('NotResource' in st || resources.includes('*')) {
-      const allowed = (contract.iamResourceWildcardAllowlist ?? []).some((e) => e.source === source && e.sid && e.sid === st.Sid && e.reason);
-      if (!allowed) out.push(v('IAM_WILDCARD_RESOURCE', where, 'Allow with Resource "*" (or NotResource) outside the documented allowlist in infra/tagging.json'));
+    if ('NotResource' in st || resources.some(isWideResource)) {
+      const entry = (contract.iamResourceWildcardAllowlist ?? []).find((e) => e.source === source && e.sid && e.sid === st.Sid);
+      if (!entry) out.push(v('IAM_WILDCARD_RESOURCE', where, 'Allow with Resource "*" (or NotResource) outside the documented allowlist in infra/tagging.json'));
+      else {
+        const problem = exceptionProblem(entry, st);
+        if (problem) out.push(v('IAM_EXCEPTION_UNDOCUMENTED', where, problem));
+      }
     }
   }
+  // An allowlist entry for this source whose statement is gone (or no longer uses "*") is stale.
+  for (const e of contract.iamResourceWildcardAllowlist ?? []) {
+    if (e.source !== source) continue;
+    const st = statementsIn(doc).find((x) => x.Sid === e.sid && x.Effect !== 'Deny');
+    if (!st || wideResources(st).length === 0) out.push(v('IAM_EXCEPTION_STALE', `${source} (Sid ${e.sid})`, 'allowlist entry has no matching Allow statement with a wildcard or type-wide resource'));
+  }
   return out;
+}
+
+// A "*"-resource exception is evidence only when it names its actions, gives a reason and cites the
+// AWS Service Authorization Reference page of the service with a verification status (and a closure point if UNVERIFIED) (T-05 Disqualifier).
+const SERVICE_REF_URL = /^https:\/\/docs\.aws\.amazon\.com\/service-authorization\/latest\/reference\/list_[a-z0-9_]+\.html$/;
+function exceptionProblem(e, st) {
+  if (typeof e.reason !== 'string' || !e.reason.trim()) return 'exception has no reason';
+  if (typeof e.reference !== 'string' || !SERVICE_REF_URL.test(e.reference)) return 'exception reference must be a Service Authorization Reference URL (list_<service>.html)';
+  if (typeof e.referenceStatus !== 'string' || !e.referenceStatus.trim()) return 'exception has no referenceStatus (verified at source, or UNVERIFIED)';
+  if (/^UNVERIFIED/.test(e.referenceStatus) && (typeof e.closure !== 'string' || !e.closure.trim())) return 'UNVERIFIED exception has no closure point (who closes it, and when)';
+  const wide = wideResources(st).sort();
+  const declaredRes = Array.isArray(e.resources) ? [...e.resources].sort() : null;
+  if (!declaredRes || JSON.stringify(wide) !== JSON.stringify(declaredRes)) return `exception resources ${JSON.stringify(declaredRes)} must equal the statement's wildcard resources ${JSON.stringify(wide)}`;
+  const granted = [...leaves(st.Action)].sort();
+  const declared = Array.isArray(e.actions) ? [...e.actions].sort() : null;
+  if (!declared || JSON.stringify(granted) !== JSON.stringify(declared)) return `exception actions ${JSON.stringify(declared)} must equal the statement actions ${JSON.stringify(granted)}`;
+  return null;
 }
 
 export function auditTemplate(template, contract) {
@@ -142,7 +182,9 @@ function main(argv) {
     else if (argv[i] === '--policy') opts.policies.push(path.resolve(argv[++i]));
     else { console.error(`unknown argument ${argv[i]}`); return 2; }
   }
+  let discovered = false;
   if (opts.policies.length === 0) {
+    discovered = true;
     const dir = rel('infra', 'iam');
     if (fs.existsSync(dir)) opts.policies = fs.readdirSync(dir).filter((f) => f.endsWith('.json')).sort().map((f) => path.join(dir, f));
   }
@@ -153,6 +195,10 @@ function main(argv) {
     ...auditSamconfig(fs.readFileSync(opts.samconfig, 'utf8'), contract),
   ];
   for (const p of opts.policies) violations.push(...auditPolicyDocument(JSON.parse(fs.readFileSync(p, 'utf8')), path.relative(ROOT, p).split(path.sep).join('/'), contract));
+  const audited = new Set(opts.policies.map((p) => path.relative(ROOT, p).split(path.sep).join('/')));
+  for (const e of contract.iamResourceWildcardAllowlist ?? []) {
+    if (discovered && !audited.has(e.source)) violations.push(v('IAM_EXCEPTION_STALE', `${e.source} (Sid ${e.sid})`, 'allowlist entry names a policy file that was not audited'));
+  }
   const c = classify(template, contract);
   console.log(`audit-infra: ${c.total} resources (${c.taggable} taggable, ${c.exception} documented exceptions), ${opts.policies.length} policy file(s)`);
   if (violations.length === 0) { console.log('audit-infra: PASS'); return 0; }

@@ -10,7 +10,7 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { parseTemplate } from '../../scripts/cfn-yaml.mjs';
 import {
-  loadContract, auditTemplate, auditTags, auditSamconfig, auditPolicyDocument, classify,
+  isWideResource, loadContract, auditTemplate, auditTags, auditSamconfig, auditPolicyDocument, classify,
 } from '../../scripts/audit-infra.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
@@ -155,6 +155,7 @@ test('samconfig: dropping Environment from [prod] fails; so does a wrong value o
 });
 
 // ---- IAM wildcards ----------------------------------------------------------------------------
+const REF = 'https://docs.aws.amazon.com/service-authorization/latest/reference/list_awssecuritytokenservice.html';
 const policy = (...statements) => ({ Version: '2012-10-17', Statement: statements });
 
 test('Allow wildcards fail: "*", s3:*, cloudfront:*, any service:*, NotAction', () => {
@@ -177,7 +178,7 @@ test('a Deny s3:* (TLS deny, FR-04) passes; the same statement with Allow fails'
 test('Allow with Resource "*" fails unless allowlisted by source and Sid with a reason', () => {
   const st = { Sid: 'Wide', Effect: 'Allow', Action: 'sts:GetCallerIdentity', Resource: '*' };
   assert.deepEqual(codes(auditPolicyDocument(policy(st), 'p.json', contract)), ['IAM_WILDCARD_RESOURCE']);
-  const allow = { ...contract, iamResourceWildcardAllowlist: [{ source: 'p.json', sid: 'Wide', reason: 'service needs *' }] };
+  const allow = { ...contract, iamResourceWildcardAllowlist: [{ source: 'p.json', sid: 'Wide', actions: ['sts:GetCallerIdentity'], reason: 'service needs *', resources: ['*'], reference: REF, referenceStatus: 'UNVERIFIED', closure: 'close in S2 validation (before G-DEPLOY sign-off)' }] };
   assert.deepEqual(auditPolicyDocument(policy(st), 'p.json', allow), []);
   assert.deepEqual(codes(auditPolicyDocument(policy(st), 'other.json', allow)), ['IAM_WILDCARD_RESOURCE']);
   assert.deepEqual(codes(auditPolicyDocument(policy({ ...st, Resource: { 'Fn::Sub': '*' } }), 'p.json', contract)), ['IAM_WILDCARD_RESOURCE']);
@@ -224,4 +225,123 @@ test('the CLI audits an extra --policy file (the T-05 seam)', () => {
     assert.match(r.stdout, /\[IAM_WILDCARD_ACTION\]/);
     assert.match(r.stdout, /\[IAM_WILDCARD_RESOURCE\]/);
   } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ---- T-05: operator policy infra/iam/deployer-policy.json (FR-10, NFR-01; design 7.7) ----------------------
+const SRC = 'infra/iam/deployer-policy.json';
+const deployer = () => JSON.parse(read(SRC));
+const stmt = (doc, sid) => doc.Statement.find((x) => x.Sid === sid);
+const audited = (doc, c = contract) => auditPolicyDocument(doc, SRC, c);
+
+test('the real deployer policy passes the audit and every wildcard or type-wide resource Sid has a documented exception', () => {
+  const doc = deployer();
+  assert.deepEqual(audited(doc), []);
+  const wild = doc.Statement.filter((x) => [x.Resource].flat().some(isWideResource)).map((x) => x.Sid).sort();
+  const listed = contract.iamResourceWildcardAllowlist.filter((e) => e.source === SRC).map((e) => e.sid).sort();
+  assert.deepEqual(wild, listed);
+  assert.ok(doc.Statement.every((x) => x.Effect === 'Allow' && typeof x.Sid === 'string'));
+});
+
+test('every deployer exception names its actions, a reason, a Service Authorization Reference URL and a status', () => {
+  const entries = contract.iamResourceWildcardAllowlist.filter((e) => e.source === SRC);
+  assert.ok(entries.length > 0);
+  for (const e of entries) {
+    assert.ok(e.reason && e.referenceStatus && Array.isArray(e.actions) && e.actions.length > 0, e.sid);
+    assert.match(e.reference, /^https:\/\/docs\.aws\.amazon\.com\/service-authorization\/latest\/reference\/list_[a-z0-9_]+\.html$/, e.sid);
+  }
+});
+
+test('the deployer policy grants no ACM write, no Route 53 action, no PassRole and no wildcard action (FR-10)', () => {
+  const actions = deployer().Statement.flatMap((x) => [x.Action].flat());
+  assert.deepEqual(actions.filter((a) => /^acm:/.test(a)).sort(), ['acm:DescribeCertificate', 'acm:ListCertificates']);
+  assert.deepEqual(actions.filter((a) => /^(route53|route53domains|acm-pca):/.test(a)), []);
+  assert.deepEqual(actions.filter((a) => a === 'iam:PassRole' || a.includes('*')), []);
+});
+
+test('CLI audits the deployer policy by default and reports it', () => {
+  const r = spawnSync(process.execPath, ['scripts/audit-infra.mjs'], { cwd: ROOT, encoding: 'utf8' });
+  assert.equal(r.status, 0, r.stdout);
+  assert.match(r.stdout, /1 policy file\(s\)/);
+});
+
+test('mutated deployer policy: acm:RequestCertificate, route53:ChangeResourceRecordSets and s3:* each fail', () => {
+  const cases = [
+    ['acm:RequestCertificate', 'IAM_FORBIDDEN_WRITE'],
+    ['route53:ChangeResourceRecordSets', 'IAM_FORBIDDEN_WRITE'],
+    ['s3:*', 'IAM_WILDCARD_ACTION'],
+  ];
+  for (const [action, code] of cases) {
+    const doc = deployer();
+    stmt(doc, 'S3Publish').Action.push(action);
+    assert.deepEqual(codes(audited(doc)), [code], action);
+  }
+});
+
+test('mutated deployer policy: an unlisted Resource "*" statement, or an action added to an excepted Sid, fails', () => {
+  let doc = deployer();
+  doc.Statement.push({ Sid: 'Extra', Effect: 'Allow', Action: 'sts:GetCallerIdentity', Resource: '*' });
+  assert.deepEqual(codes(audited(doc)), ['IAM_WILDCARD_RESOURCE']);
+  doc = deployer();
+  stmt(doc, 'TaggingRead').Action = ['tag:GetResources', 'tag:TagResources'];
+  assert.deepEqual(codes(audited(doc)), ['IAM_EXCEPTION_UNDOCUMENTED']);
+  doc = deployer();
+  stmt(doc, 'S3Publish').Resource = '*';
+  assert.deepEqual(codes(audited(doc)), ['IAM_WILDCARD_RESOURCE']);
+});
+
+test('an exception without a reference URL, with a non-service URL, or without status is rejected; a stale entry is flagged', () => {
+  const mutate = (fn) => { const c = structuredClone(contract); fn(c.iamResourceWildcardAllowlist.find((e) => e.sid === 'TaggingRead')); return audited(deployer(), c); };
+  assert.deepEqual(codes(mutate((e) => { delete e.reference; })), ['IAM_EXCEPTION_UNDOCUMENTED']);
+  assert.deepEqual(codes(mutate((e) => { e.reference = 'https://example.com/list_x.html'; })), ['IAM_EXCEPTION_UNDOCUMENTED']);
+  assert.deepEqual(codes(mutate((e) => { delete e.referenceStatus; })), ['IAM_EXCEPTION_UNDOCUMENTED']);
+  assert.deepEqual(codes(mutate((e) => { delete e.reason; })), ['IAM_EXCEPTION_UNDOCUMENTED']);
+  const doc = deployer();
+  doc.Statement = doc.Statement.filter((x) => x.Sid !== 'TaggingRead');
+  assert.deepEqual(codes(audited(doc)), ['IAM_EXCEPTION_STALE']);
+});
+
+test('CLI exits 1 on a mutated copy of the deployer policy given by --policy (other source name: its wildcard Sids are unlisted)', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'audit-infra-'));
+  try {
+    const doc = deployer();
+    stmt(doc, 'S3Publish').Action.push('route53:ChangeResourceRecordSets');
+    const file = path.join(dir, 'deployer-policy.json');
+    fs.writeFileSync(file, JSON.stringify(doc));
+    const r = spawnSync(process.execPath, ['scripts/audit-infra.mjs', '--policy', file], { cwd: ROOT, encoding: 'utf8' });
+    assert.equal(r.status, 1);
+    assert.match(r.stdout, /\[IAM_FORBIDDEN_WRITE\].*route53:ChangeResourceRecordSets/);
+    const found = [...r.stdout.matchAll(/^  \[([A-Z_]+)\]/gm)].map((m) => m[1]);
+    const wild = deployer().Statement.filter((x) => [x.Resource].flat().some(isWideResource)).length;
+    assert.deepEqual(found.sort(), ['IAM_FORBIDDEN_WRITE', ...Array(wild).fill('IAM_WILDCARD_RESOURCE')].sort());
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
+// ---- T-05 rework: type-wide ARNs count as wildcards (resource-id segment is only "*") -------------------
+test('an unlisted type-wide ARN (distribution/*, changeSet/*/*, bare *) fails like Resource "*"', () => {
+  for (const arn of ['arn:aws:cloudfront::*:distribution/*', 'arn:aws:cloudformation:*:*:changeSet/*/*', 'arn:aws:s3:::*']) {
+    const f = auditPolicyDocument(policy({ Sid: 'TypeWide', Effect: 'Allow', Action: 'cloudfront:DeleteDistribution', Resource: arn }), 'p.json', contract);
+    assert.deepEqual(codes(f), ['IAM_WILDCARD_RESOURCE'], arn);
+  }
+  for (const arn of ['arn:aws:s3:::results-dashboard-*/*', 'arn:aws:cloudfront::*:function/results-dashboard-*', 'arn:aws:cloudformation:*:*:stack/results-dashboard-*/*']) {
+    assert.deepEqual(auditPolicyDocument(policy({ Sid: 'Named', Effect: 'Allow', Action: 'cloudfront:GetFunction', Resource: arn }), 'p.json', contract), [], arn);
+  }
+});
+
+test('mutated deployer policy: widening a scoped statement to a type-wide ARN, or dropping a type-wide exception, fails', () => {
+  let doc = deployer();
+  stmt(doc, 'CloudFrontFunctions').Resource = 'arn:aws:cloudfront::*:function/*';
+  assert.deepEqual(codes(audited(doc)), ['IAM_WILDCARD_RESOURCE']);
+  doc = deployer();
+  stmt(doc, 'CloudFrontDistributions').Resource = ['arn:aws:cloudfront::*:distribution/*', 'arn:aws:cloudfront::*:function/*'];
+  assert.deepEqual(codes(audited(doc)), ['IAM_EXCEPTION_UNDOCUMENTED']);
+  const c = structuredClone(contract);
+  c.iamResourceWildcardAllowlist = c.iamResourceWildcardAllowlist.filter((e) => e.sid !== 'CloudFrontOacAndPolicies');
+  assert.deepEqual(codes(audited(deployer(), c)), ['IAM_WILDCARD_RESOURCE']);
+});
+
+test('every UNVERIFIED exception names its closure point and every exception lists its resources', () => {
+  for (const e of contract.iamResourceWildcardAllowlist.filter((x) => x.source === SRC)) {
+    assert.ok(Array.isArray(e.resources) && e.resources.length > 0, e.sid);
+    if (/^UNVERIFIED/.test(e.referenceStatus)) assert.match(e.closure, /S2 validation \(before G-DEPLOY sign-off\)/, e.sid);
+  }
 });
