@@ -1,0 +1,65 @@
+.indicator-description {
+    font-size: 12px;
+    text-align: justify;
+}
+
+.slo-contribution {
+    height: 260px;
+}
+
+.oicr-contribution {
+    height: 300px;
+}
+
+.milestones-contribution {
+    height: 300px;
+}
+
+.number-container {
+    height:90px;
+    max-width: 130px;
+}
+
+.charts {
+    margin-top: -3%;
+}
+
+.section-link {
+    font-size: 11px;
+    font-weight: 600;
+    font-family: 'Montserrat', sans-serif;
+    text-transform: uppercase;
+}
+
+.view-disabled {
+    color: #717171;
+    cursor: not-allowed;
+}
+
+.view-enabled:after {
+    content:url('../images/redirect.png');
+   }
+
+.slo-description {
+    margin-bottom: 0;
+}
+
+.indicators-top {
+    height: 16px;
+}
+
+.insights {
+    height:340px;
+}
+
+.sdg-wheel {
+  float: left;
+  padding: 15px;
+}
+
+.coming-soon {
+  opacity: .2;
+  max-width: 250px;
+  height: 100%;
+}
+

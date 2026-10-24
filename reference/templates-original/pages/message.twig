@@ -1,0 +1,31 @@
+{% import "./macros/messages.twig" as messages %}
+
+<div class="browser-message" style="display:none">This Dashboard works best with
+    <ul>
+        <li>
+            <a href="https://www.google.com/chrome/" class="infotool" target="_blank" title="Google Chrome">
+                <img src="./images/browser_chrome.svg" width="30px" height="30px">
+            </a>
+        </li>
+        <li>
+            <a href="https://www.mozilla.org/en-US/firefox/new/" class="infotool" target="_blank" title="Firefox">
+                <img src="./images/browser_firefox.svg" width="30px" height="30px">
+            </a>
+        </li>
+        <li>
+            <a href="https://www.microsoft.com/en-us/download/details.aspx?id=48126" class="infotool" target="_blank" title="Microsoft Edge">
+                <img src="./images/browser_microsoftEdge.svg" width="30px" height="30px">
+            </a>
+        </li>
+    </ul>
+</div>
+
+
+
+<!-- Messages -->
+
+{% for message in messagesArray %}
+    {% if currentSection == message.indicator %}
+        {{ messages.message(message.id, message.crp, message.year, message.indicator, message.message, message.level) }}
+    {% endif %}
+{% endfor %}

@@ -1,0 +1,29 @@
+.policies-map {
+  width: 100%;
+  height: 390px;
+}
+
+.policies-scope {
+  width: 100%;
+  height: 230px;
+  margin-bottom: 5px;
+}
+
+
+.maturity-level {
+  width: 100%;
+  height: 170px;
+}
+
+.investment-type {
+  width: 100%;
+  height: 170px;
+}
+
+.policies-table {
+  height: 400px;
+}
+
+.topsdgs-container {
+  height: 115px;
+}

@@ -1,0 +1,73 @@
+{% set pageParams = {
+    'title': 'Glossary | CGIAR Program Results Dashboard',
+    'customCSS': [
+      'https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css',
+      'https://use.fontawesome.com/releases/v5.2.0/css/all.css',
+      './css/customInputsFlat.css?20210617a',
+      './css/sideMenu.css?20210701a',
+      './css/global.css?20210701a',
+      './css/glossary.css?20210617a'
+    ],
+    'customJS': [
+      './js/libs/jquery/jquery-3.4.1.min.js',
+      'https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/1.0.3/jquery.csv.min.js',
+      './js/glossary.js?20210730a',
+      './js/sideMenu.js?20210506a',
+    ]
+  }
+%}
+
+{% include './pages/header.twig' with pageParams %}
+
+<div class="container-fluid">
+    <!-- Filters -->
+    {% if embed %}
+    <div class="row justify-content-center">
+      <div class="col-md-2" style="display:{{ displayNav ? 'block' : 'none' }};"></div>
+      <div class="col-md-10">{% include './pages/filters.twig' with pageParams %}</div>
+    </div>
+  {% endif %}
+<div class="row justify-content-center">
+  <div class="col-md-2" style="display:{{ displayNav ? 'block' : 'none' }};">
+  {% include './pages/side-menu.twig' with pageParams %}
+  </div>
+  <div class="col-md-10" {% if displayNav==false %}style="padding-left: 0!important"{% endif %}>
+    <div class="main-content">
+    <button class="navbar-toggler" type="button" style="display:none">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="browser-message" style="display:none; width: 380px; color: black; font-size: 10px;">For the best experience in this section, we recommend that you use of one of the following browsers:
+    <ul>
+        <li>
+            <a href="https://www.google.com/chrome/" class="infotool" target="_blank" title="Google Chrome">
+                <img src="./images/browser_chrome.svg" width="30px" height="30px">
+            </a>
+        </li>
+        <li>
+            <a href="https://www.mozilla.org/en-US/firefox/new/" class="infotool" target="_blank" title="Firefox">
+                <img src="./images/browser_firefox.svg" width="30px" height="30px">
+            </a>
+        </li>
+        <li>
+            <a href="https://www.microsoft.com/en-us/edge" class="infotool" target="_blank" title="Microsoft Edge">
+                <img src="./images/browser_microsoftEdge.svg" width="30px" height="30px">
+            </a>
+        </li>
+    </ul>
+</div>
+
+    <div class="mb-4">
+      <h6 class="section-title">Glossary</h6>
+      <p class="section-description">This glossary section provides definitions of the key concepts used in the CGIAR Results Framework.</p>
+      <iframe id="svg-iframe" width="100%" height="600"  frameBorder="0" src="images/svg-interactive.svg?20210730a"></iframe>
+      <div class="clearFilterBtn" onclick="loadTerms('0', 'All terms')">SHOW ALL TERMS</div>
+      <div class="tableWrapper">
+          <table>
+            <tbody id="termsDefinitionsTable">
+            </tbody>
+          </table>
+      </div>
+    </div>
+    
+{% include './pages/footer.twig'  with pageParams %}

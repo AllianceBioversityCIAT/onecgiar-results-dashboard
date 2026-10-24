@@ -1,0 +1,26 @@
+{
+  "name": "results-dashboard-static",
+  "version": "0.1.0",
+  "private": true,
+  "description": "CGIAR Results Dashboard: static site build and local tooling",
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0 <23"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "serve": "node scripts/serve.mjs",
+    "test": "node --test --test-concurrency=1 \"tests/unit/*.test.mjs\"",
+    "test:e2e": "playwright test",
+    "compare": "node scripts/compare.mjs",
+    "evidence": "node scripts/evidence.mjs"
+  },
+  "devDependencies": {
+    "@fortawesome/fontawesome-free": "5.2.0",
+    "@playwright/test": "1.64.0",
+    "animate.css": "3.7.0",
+    "bootstrap": "4.1.3",
+    "jquery-csv": "1.0.3",
+    "twig": "3.0.0"
+  }
+}

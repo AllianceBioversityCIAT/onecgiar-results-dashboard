@@ -1,0 +1,43 @@
+.map-container {
+    height: 380px;
+}
+  
+.donut-container {
+    height: 370px;
+}
+  
+.maturity-container {
+    height: 330px;
+}
+  
+.cross-container {
+    height: 330px;
+}
+
+.sdg-container {
+    height: 135px;
+}
+
+.list-content {
+    height: 500px;
+}
+
+.sdg-title {
+    font-size: 10px;
+    margin-top: -10px;
+    color: #585858;
+}
+
+.contributingPartners-container {
+    height: 100px;
+}
+
+.topPartners-container {
+    height: 222px;
+}
+
+@media (max-width: 985px){
+    .sdg-logo {
+        display: none;
+    }
+}

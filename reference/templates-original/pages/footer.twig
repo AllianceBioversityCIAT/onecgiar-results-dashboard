@@ -1,0 +1,33 @@
+            <br/><div class="data-info">
+              <p class="contact-info">To report bugs or suggest improvements please click <a href="https://sites.google.com/cgxchange.org/cgiar-pbm-resources/issues-dashboard/submit-a-new-issue" target="_blank">here</a>.</p>   
+              {# <img style="height: 100px;" src="./images/browser-support.png"></img>         #}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Other Libraries -->
+    <script type="text/javascript" src="./js/libs/jquery/jquery-3.4.1.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="./js/libs/bootstrap/popper.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="./js/libs/bootstrap/bootstrap.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="./js/libs/URL/url.min.js" charset="utf-8"></script>
+    <script type="text/javascript" src="./js/libs/tableau/tableau-2.8.0.min.js?20211209a" charset="utf-8"></script>
+
+    <!-- Tableau custom functions-->
+    <script type="text/javascript" src="./js/tableauFunctions.js?20210224b" charset="utf-8"></script>
+
+    <!-- Global Javascript -->
+    <script type="text/javascript" src="./js/global.js?20200806b" charset="utf-8"></script>
+
+    <!-- Custom Javascript -->
+    {% for element in pageParams.customJS %}
+      <script type="text/javascript" src="{{ element }}?20200806b"></script>
+    {% endfor %}
+
+    <!-- Embeding Javascript -->
+    {% if embed %}
+      <script src="./js/embedMode.js?20200806b" charset="utf-8"></script>
+    {% endif %}
+  </body>
+</html>

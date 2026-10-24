@@ -1,0 +1,9 @@
+{% macro tooltipInfo(chart, title, description) %}
+
+    {% if title == chart %}
+        <div class="chart-tooltip" data-toggle="popover" data-html="true" data-content="{{ description }}">
+        ?
+        </div>
+    {% endif %}
+
+{% endmacro %}

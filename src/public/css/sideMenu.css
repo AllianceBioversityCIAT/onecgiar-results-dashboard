@@ -1,0 +1,51 @@
+@media (min-width: 1513px){
+    .expanded-menu {
+            max-width: 220px;
+            /* position: fixed; */
+            margin-left: 2%;
+    }
+}
+
+@media (max-width: 1320px){
+  nav.main-menu ul li {
+      font-size: 0.7rem !important;
+  }
+
+  nav.main-menu ul li a {
+      padding: 7px 10px !important;
+      color: #8a8a8a;
+  }
+
+  svg {
+      width: 20px !important;
+      height: 20px !important;
+  }
+}
+
+.nav.sideBar {
+    display: flex;
+    align-items: center;
+    background: #2F0C39;
+    padding: 10px 0;
+    border-radius: 5px;
+}
+
+.menu-section, .menu-title {
+    font-weight: 600;
+}
+.construction {
+    float: right;
+    position: relative;
+    vertical-align: middle;
+}
+
+svg {
+    width: 25px;
+    height: 25px;
+    fill: #00a0b0;
+    margin-right: 15px;
+    background: white;
+    border-radius: 50%;
+    vertical-align: text-top;
+    display: inline-block;
+}

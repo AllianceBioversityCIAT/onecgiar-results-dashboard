@@ -1,0 +1,15 @@
+# DD-11: neutralize core.autocrlf on every machine.
+* text=auto eol=lf
+reference/** -text
+src/public/** -text
+*.png -text
+*.jpg -text
+*.jpeg -text
+*.gif -text
+*.ico -text
+*.svg -text
+*.woff -text
+*.woff2 -text
+*.ttf -text
+*.eot -text
+*.otf -text
