@@ -17,7 +17,8 @@
     "evidence": "node scripts/evidence.mjs",
     "freeze": "node scripts/freeze-artifact.mjs",
     "build:infra": "node scripts/build-infra.mjs",
-    "verify:deploy": "node scripts/verify-deploy.mjs"
+    "verify:deploy": "node scripts/verify-deploy.mjs",
+    "publish": "node scripts/publish.mjs"
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "5.2.0",
