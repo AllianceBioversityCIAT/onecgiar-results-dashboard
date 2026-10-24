@@ -1,0 +1,173 @@
+{
+ "_comment": "R1 matrix (design 10.2): exactly 84 cases. query is exactly as sent (percent-encoded). expect.appConfig holds the expected values of window.appConfig, Twig-escaped, written as literals (E2/E3/F from tests/golden/twig.json).",
+ "cases": [
+  { "id": "A-home", "group": "A", "path": "/home", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-home-embed", "group": "A", "path": "/home", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-home-embed-nonav", "group": "A", "path": "/home", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-geographicScope", "group": "A", "path": "/geographicScope", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-geographicScope-embed", "group": "A", "path": "/geographicScope", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-geographicScope-embed-nonav", "group": "A", "path": "/geographicScope", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-partners", "group": "A", "path": "/partners", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-partners-embed", "group": "A", "path": "/partners", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-partners-embed-nonav", "group": "A", "path": "/partners", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-SDG", "group": "A", "path": "/SDG", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-SDG-embed", "group": "A", "path": "/SDG", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-SDG-embed-nonav", "group": "A", "path": "/SDG", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-systemLevelOutcomes", "group": "A", "path": "/systemLevelOutcomes", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-systemLevelOutcomes-embed", "group": "A", "path": "/systemLevelOutcomes", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-systemLevelOutcomes-embed-nonav", "group": "A", "path": "/systemLevelOutcomes", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-caseReports", "group": "A", "path": "/caseReports", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-caseReports-embed", "group": "A", "path": "/caseReports", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-caseReports-embed-nonav", "group": "A", "path": "/caseReports", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-innovations", "group": "A", "path": "/innovations", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-innovations-embed", "group": "A", "path": "/innovations", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-innovations-embed-nonav", "group": "A", "path": "/innovations", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-policies", "group": "A", "path": "/policies", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-policies-embed", "group": "A", "path": "/policies", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-policies-embed-nonav", "group": "A", "path": "/policies", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-milestones", "group": "A", "path": "/milestones", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-milestones-embed", "group": "A", "path": "/milestones", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-milestones-embed-nonav", "group": "A", "path": "/milestones", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-partnerships", "group": "A", "path": "/partnerships", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": true } }
+  },
+  { "id": "A-partnerships-embed", "group": "A", "path": "/partnerships", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": true } }
+  },
+  { "id": "A-partnerships-embed-nonav", "group": "A", "path": "/partnerships", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": true } }
+  },
+  { "id": "A-capDev", "group": "A", "path": "/capDev", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-capDev-embed", "group": "A", "path": "/capDev", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-capDev-embed-nonav", "group": "A", "path": "/capDev", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-altmetric", "group": "A", "path": "/altmetric", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-altmetric-embed", "group": "A", "path": "/altmetric", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-altmetric-embed-nonav", "group": "A", "path": "/altmetric", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-publications", "group": "A", "path": "/publications", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-publications-embed", "group": "A", "path": "/publications", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-publications-embed-nonav", "group": "A", "path": "/publications", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-MELIA", "group": "A", "path": "/MELIA", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-MELIA-embed", "group": "A", "path": "/MELIA", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-MELIA-embed-nonav", "group": "A", "path": "/MELIA", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-genebanks", "group": "A", "path": "/genebanks", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-genebanks-embed", "group": "A", "path": "/genebanks", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-genebanks-embed-nonav", "group": "A", "path": "/genebanks", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-glossary", "group": "A", "path": "/glossary", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-glossary-embed", "group": "A", "path": "/glossary", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-glossary-embed-nonav", "group": "A", "path": "/glossary", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-ethiopia", "group": "A", "path": "/ethiopia", "query": "", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-ethiopia-embed", "group": "A", "path": "/ethiopia", "query": "embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "A-ethiopia-embed-nonav", "group": "A", "path": "/ethiopia", "query": "embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "B-partnerships-2017", "group": "B", "path": "/partnerships", "query": "year=2017", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2017", "forceRefresh": true } }
+  },
+  { "id": "B-partnerships-2017-embed", "group": "B", "path": "/partnerships", "query": "year=2017&embed=true&displayNav=true", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2017", "forceRefresh": true } }
+  },
+  { "id": "B-partnerships-2017-embed-nonav", "group": "B", "path": "/partnerships", "query": "year=2017&embed=true&displayNav=false", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2017", "forceRefresh": true } }
+  },
+  { "id": "C-home-2019", "group": "C", "path": "/home", "query": "year=2019", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2019", "forceRefresh": false } }
+  },
+  { "id": "C-home-2019-CCAFS", "group": "C", "path": "/home", "query": "year=2019&entity=CCAFS", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "CCAFS", "yearSelected": "2019", "forceRefresh": false } }
+  },
+  { "id": "C-home-2017", "group": "C", "path": "/home", "query": "year=2017", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2017", "forceRefresh": false } }
+  },
+  { "id": "C-home-2017-CCAFS", "group": "C", "path": "/home", "query": "year=2017&entity=CCAFS", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "CCAFS", "yearSelected": "2017", "forceRefresh": false } }
+  },
+  { "id": "C-home-empty", "group": "C", "path": "/home", "query": "year=", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "", "forceRefresh": false } }
+  },
+  { "id": "C-home-empty-CCAFS", "group": "C", "path": "/home", "query": "year=&entity=CCAFS", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "CCAFS", "yearSelected": "", "forceRefresh": false } }
+  },
+  { "id": "C-home-abc", "group": "C", "path": "/home", "query": "year=abc", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "abc", "forceRefresh": false } }
+  },
+  { "id": "C-home-abc-CCAFS", "group": "C", "path": "/home", "query": "year=abc&entity=CCAFS", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "CCAFS", "yearSelected": "abc", "forceRefresh": false } }
+  },
+  { "id": "C-innovations-2019", "group": "C", "path": "/innovations", "query": "year=2019", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2019", "forceRefresh": false } }
+  },
+  { "id": "C-innovations-2019-CCAFS", "group": "C", "path": "/innovations", "query": "year=2019&entity=CCAFS", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "CCAFS", "yearSelected": "2019", "forceRefresh": false } }
+  },
+  { "id": "C-innovations-2017", "group": "C", "path": "/innovations", "query": "year=2017", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2017", "forceRefresh": false } }
+  },
+  { "id": "C-innovations-2017-CCAFS", "group": "C", "path": "/innovations", "query": "year=2017&entity=CCAFS", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "CCAFS", "yearSelected": "2017", "forceRefresh": false } }
+  },
+  { "id": "C-innovations-empty", "group": "C", "path": "/innovations", "query": "year=", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "", "forceRefresh": false } }
+  },
+  { "id": "C-innovations-empty-CCAFS", "group": "C", "path": "/innovations", "query": "year=&entity=CCAFS", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "CCAFS", "yearSelected": "", "forceRefresh": false } }
+  },
+  { "id": "C-innovations-abc", "group": "C", "path": "/innovations", "query": "year=abc", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "abc", "forceRefresh": false } }
+  },
+  { "id": "C-innovations-abc-CCAFS", "group": "C", "path": "/innovations", "query": "year=abc&entity=CCAFS", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "CCAFS", "yearSelected": "abc", "forceRefresh": false } }
+  },
+  { "id": "D-partnerships-2019", "group": "D", "path": "/partnerships", "query": "year=2019", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "2019", "forceRefresh": true } }
+  },
+  { "id": "D-partnerships-2019-CCAFS", "group": "D", "path": "/partnerships", "query": "year=2019&entity=CCAFS", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "CCAFS", "yearSelected": "2019", "forceRefresh": true } }
+  },
+  { "id": "D-partnerships-empty", "group": "D", "path": "/partnerships", "query": "year=", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "", "forceRefresh": true } }
+  },
+  { "id": "D-partnerships-empty-CCAFS", "group": "D", "path": "/partnerships", "query": "year=&entity=CCAFS", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "CCAFS", "yearSelected": "", "forceRefresh": true } }
+  },
+  { "id": "D-partnerships-abc", "group": "D", "path": "/partnerships", "query": "year=abc", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "", "yearSelected": "abc", "forceRefresh": true } }
+  },
+  { "id": "D-partnerships-abc-CCAFS", "group": "D", "path": "/partnerships", "query": "year=abc&entity=CCAFS", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "CCAFS", "yearSelected": "abc", "forceRefresh": true } }
+  },
+  { "id": "D-partnerships-2017-CCAFS", "group": "D", "path": "/partnerships", "query": "year=2017&entity=CCAFS", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "CCAFS", "yearSelected": "2017", "forceRefresh": true } }
+  },
+  { "id": "E-innovations-embed-1", "group": "E", "path": "/innovations", "query": "embed=true&displayNav=true&hostOrigin=http%3A%2F%2Flocalhost%3A8081", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "http://localhost:8081", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "E-innovations-embed-2", "group": "E", "path": "/innovations", "query": "embed=true&displayNav=true&hostOrigin=http%3A%2F%2Fa.test%2F%3Fx%3D1%26y%3D%272%27", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "http://a.test/?x=1&amp;y=&#039;2&#039;", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "E-innovations-embed-3", "group": "E", "path": "/innovations", "query": "embed=true&displayNav=true&hostOrigin=http%3A%2F%2Fh.test%2F%24%26%24%27", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "http://h.test/$&amp;$&#039;", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "E-innovations-embed-nonav-1", "group": "E", "path": "/innovations", "query": "embed=true&displayNav=false&hostOrigin=http%3A%2F%2Flocalhost%3A8081", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "http://localhost:8081", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "E-innovations-embed-nonav-2", "group": "E", "path": "/innovations", "query": "embed=true&displayNav=false&hostOrigin=http%3A%2F%2Fa.test%2F%3Fx%3D1%26y%3D%272%27", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "http://a.test/?x=1&amp;y=&#039;2&#039;", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "E-innovations-embed-nonav-3", "group": "E", "path": "/innovations", "query": "embed=true&displayNav=false&hostOrigin=http%3A%2F%2Fh.test%2F%24%26%24%27", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "http://h.test/$&amp;$&#039;", "entitySelected": "", "yearSelected": "2021", "forceRefresh": false } }
+  },
+  { "id": "F-innovations-escape", "group": "F", "path": "/innovations", "query": "year=a%26b%27%22%3Cx%3E&entity=x%26y", "expect": { "appConfig": { "production": true, "tableauView": "https://public.tableau.com/views/", "tableauViewNew": "https://tableau-core.cgiar.org/views/", "hostOrigin": "", "entitySelected": "x&amp;y", "yearSelected": "a&amp;b&#039;&quot;&lt;x&gt;", "forceRefresh": false } }
+  }
+ ]
+}
