@@ -1,4 +1,4 @@
-// npm run build (design.md 7.1, steps 1-9 and 11; step 10 `build-edge.mjs` belongs to T-09).
+// npm run build (design.md 7.1, steps 1-11; step 10 is delegated to scripts/build-edge.mjs).
 // Pure static output: no PHP, no timestamps or absolute paths inside the output (FR-02, FR-29).
 //
 // Environment: BUILD_OUT_DIR (output folder, default <repo>/dist; its dist-edge/ and artifacts/
@@ -16,6 +16,7 @@ import { loadSite, validateSite, routableSections, rdData, REPO_ROOT, SiteDataEr
 import { checkRefGraph } from './refgraph.mjs';
 import { checkTableauViews } from './tableau-check.mjs';
 import { runHygiene } from './hygiene.mjs';
+import { buildEdge, EdgeBuildError } from './build-edge.mjs';
 import { computeManifest, writeManifest, listFiles } from './manifest.mjs';
 
 export class BuildError extends Error {
@@ -311,6 +312,16 @@ export function build({ srcDir, outDir, repoRoot = REPO_ROOT, log = () => {} } =
     const findings = runHygiene({ outDir: out, sentinel: site.sentinel });
     if (findings.length > 0) {
       throw new BuildError(9, 'hygiene', [`${findings.length} finding(s)`, ...findings.map((f) => `${f.file}: ${f.rule} (${f.detail})`)]);
+    }
+  });
+
+  // 10. Edge: dist-edge/cloudfront-function.js (sibling of the output folder, outside the manifest)
+  timed('edge', () => {
+    try {
+      buildEdge({ srcDir: src, edgeDir, site });
+    } catch (e) {
+      if (e instanceof EdgeBuildError) throw new BuildError(10, 'edge', e.details);
+      throw e;
     }
   });
 
