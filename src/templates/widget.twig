@@ -1,3 +1,28 @@
+(function () {
+  // Captured first: document.currentScript is null once an async/defer script has run or when AMD defers the factory.
+  var rdCurrentScript = document.currentScript;
+  var rdScriptPath = '/widget/main.js';
+  var rdScriptUrl = null;
+  if (rdCurrentScript && rdCurrentScript.src) {
+    rdScriptUrl = new URL(rdCurrentScript.src, document.baseURI);
+  } else {
+    var rdScripts = document.scripts || document.getElementsByTagName('script');
+    for (var i = rdScripts.length - 1; i >= 0 && !rdScriptUrl; i--) {
+      if (!rdScripts[i].src) { continue; }
+      try {
+        var candidate = new URL(rdScripts[i].src, document.baseURI);
+        if (candidate.pathname.slice(-rdScriptPath.length) === rdScriptPath) { rdScriptUrl = candidate; }
+      } catch (e) {}
+    }
+  }
+  if (!rdScriptUrl) {
+    throw new Error('ResultsDashboardWidget: cannot resolve the URL it was loaded from (expected a <script> ending in ' + rdScriptPath + ')');
+  }
+  var rdBaseOrigin = rdScriptUrl.origin;
+  var rdBasePath = rdScriptUrl.pathname;
+  if (rdBasePath.slice(-rdScriptPath.length) === rdScriptPath) { rdBasePath = rdBasePath.slice(0, -rdScriptPath.length); }
+  var rdBaseURL = rdBaseOrigin + rdBasePath;
+
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
@@ -25,8 +50,8 @@
 			this.userOptions.displayNav = userOptions.displayNav;
 		}
     this.hostOrigin = document.location.origin;
-		this.baseURL = '{{ baseURL }}';
-		this.baseOrigin = '{{ baseOrigin  }}';
+		this.baseURL = rdBaseURL;
+		this.baseOrigin = rdBaseOrigin;
 
     // Initialize
     this.init();
@@ -142,3 +167,4 @@
 
   return ResultsDashboardWidget;
 })));
+}).call(this);

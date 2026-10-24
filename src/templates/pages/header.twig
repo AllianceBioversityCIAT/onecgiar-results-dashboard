@@ -25,29 +25,13 @@
 		<link href='./css/global.css?20200806b' rel='stylesheet' type='text/css'>
 		<link
 		href='./css/pageloading.css' rel='stylesheet' type='text/css'>
-		<!-- Global site tag (gtag.js) - Google Analytics -->
-		<script async src="https://www.googletagmanager.com/gtag/js?id=UA-128966130-1"></script>
-		<script>
-			window.dataLayer = window.dataLayer || [];
-function gtag() {
-dataLayer.push(arguments);
-}
-gtag('js', new Date());
-
-gtag('config', 'UA-128966130-1');
-		</script>
-		<!-- Application config parameters -->
-		<script type="text/javascript">
-			var appConfig = {
-                 production: {{ appConfig.production |json_encode() }},
-                 tableauView: '{{ appConfig.tableauView }}',
-                 tableauViewNew: '{{ appConfig.tableauViewNew }}',
-                 hostOrigin: '{{ hostOrigin }}',
-                 entitySelected: '{{ entitySelected }}',
-                 yearSelected: '{{ yearSelected }}',
-                 forceRefresh: {{ forceRefresh |json_encode() }}
-			};
-		</script>
+		<!-- Runtime parameters: rd-params.js reads the data-rd-* attributes (DD-15) -->
+		<script src="./js/legacy-compat.js" charset="utf-8"></script>
+		<script src="./js/rd-params.js" charset="utf-8"
+			data-rd-production="{{ appConfig.production |json_encode() }}"
+			data-rd-tableau-view="{{ appConfig.tableauView }}"
+			data-rd-tableau-view-new="{{ appConfig.tableauViewNew }}"
+			data-rd-force-refresh="{{ forceRefresh |json_encode() }}"></script>
 	</head>
 	<body class="dashboardBody">
 		{% if not appConfig.production %}

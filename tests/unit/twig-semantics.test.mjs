@@ -10,7 +10,8 @@ import { fileURLToPath } from 'node:url';
 import { createRenderer } from '../../scripts/twig-config.mjs';
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
-const TEMPLATES = join(ROOT, 'src', 'templates');
+// T-05 edits src/templates (header/footer/widget); these goldens assert the original markup, so they run on the frozen copy.
+const TEMPLATES = join(ROOT, 'reference', 'templates-original');
 const golden = JSON.parse(readFileSync(join(ROOT, 'tests', 'golden', 'twig.json'), 'utf8'));
 const inline = createRenderer({ templatesRoot: TEMPLATES });
 const factIds = new Set(golden.facts.map((f) => f.id));
