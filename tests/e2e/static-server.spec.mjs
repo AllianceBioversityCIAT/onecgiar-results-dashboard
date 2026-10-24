@@ -6,6 +6,10 @@
 import { test, expect, settle, localErrors, hostOf } from './helpers/network.mjs';
 import { nonStaticLocalRequests as nonStatic } from './helpers/network.mjs';
 import { rawRequest } from '../helpers/raw-http.mjs';
+import { markClass } from './helpers/tableau.mjs';
+
+// FR-27 / design 10.1: exactly one class annotation per test.
+test.beforeEach(async ({}, testInfo) => markClass(testInfo, 'LOCAL'));
 
 const BASE = 'http://localhost:8081';
 

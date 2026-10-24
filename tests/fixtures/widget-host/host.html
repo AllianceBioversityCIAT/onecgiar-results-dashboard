@@ -1,0 +1,36 @@
+<!doctype html>
+<!-- Widget test host (design 7.5, T-14). Not named index.html: the plain server maps "/" to index.html, which static-server.spec requires to be 404 on 8081.
+     Served on http://localhost:8081, a DIFFERENT origin from the
+     dashboard on 8080. It only loads /widget/main.js from the dashboard; it never creates the widget
+     itself, so each test drives `new ResultsDashboardWidget(...)` (FR-12).
+     Query parameters select what the host does (test knobs, not part of the product):
+       base  dashboard origin (default http://localhost:8080)
+       src   full script URL (overrides base + /widget/main.js)
+       v     appended to the script URL as ?v=<value>
+       load  sync (default) | async | defer
+       amd   1 = define a fake AMD loader (define.amd) that runs the factory on the next tick -->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Widget host</title>
+  <script>
+    (function () {
+      var q = new URLSearchParams(location.search);
+      if (q.get('amd') === '1') {
+        // Like a minimal require.js: the factory runs AFTER the script finished evaluating.
+        window.define = function (factory) { setTimeout(function () { window.AmdWidget = factory(); }, 0); };
+        window.define.amd = {};
+      }
+      var src = q.get('src') || ((q.get('base') || 'http://localhost:8080') + '/widget/main.js');
+      if (q.get('v')) { src += '?v=' + encodeURIComponent(q.get('v')); }
+      var load = q.get('load') || 'sync';
+      var attr = load === 'async' ? ' async' : load === 'defer' ? ' defer' : '';
+      document.write('<script id="widget-script" src="' + src + '"' + attr + '><\/script>');
+      document.write('<script>window.rdSeenAtParse = typeof window.ResultsDashboardWidget;<\/script>');
+    })();
+  </script>
+</head>
+<body>
+  <div id="el"></div>
+</body>
+</html>

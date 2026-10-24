@@ -7,6 +7,10 @@ import path from 'node:path';
 import { test, expect } from './helpers/network.mjs';
 import { rawRequest } from '../helpers/raw-http.mjs';
 import { ROOT, SECTIONS, DIST } from './helpers/site.mjs';
+import { markClass } from './helpers/tableau.mjs';
+
+// FR-27 / design 10.1: exactly one class annotation per test.
+test.beforeEach(async ({}, testInfo) => markClass(testInfo, 'LOCAL'));
 
 const { cases } = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests', 'cases', 'routing-cases.json'), 'utf8'));
 const PORTS = [8080, 8090];

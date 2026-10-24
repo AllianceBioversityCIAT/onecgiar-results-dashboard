@@ -5,6 +5,10 @@
 // ABORTED by the fixture (observed, never contacted). Class: LOCAL.
 import { test, expect, settle, unexpectedHosts, forbiddenDestinations, nonStaticLocalRequests, isLocalHost, external } from './helpers/network.mjs';
 import { SECTIONS, SECTIONS_WITHOUT_TABLEAU, site, TABLEAU_HOSTS } from './helpers/site.mjs';
+import { markClass } from './helpers/tableau.mjs';
+
+// FR-27 / design 10.1: exactly one class annotation per test.
+test.beforeEach(async ({}, testInfo) => markClass(testInfo, 'LOCAL'));
 
 // Each section, plus the variants that load different documents: legacy partnerships (public
 // Tableau), an embed document and an embed-nonav document.

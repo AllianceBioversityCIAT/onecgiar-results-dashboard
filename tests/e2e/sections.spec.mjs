@@ -5,6 +5,10 @@ import { test, expect, settle, localErrors, external } from './helpers/network.m
 import { SECTIONS, MENU_ROWS, CDN_HOSTS, DIST } from './helpers/site.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
+import { markClass } from './helpers/tableau.mjs';
+
+// FR-27 / design 10.1: exactly one class annotation per test.
+test.beforeEach(async ({}, testInfo) => markClass(testInfo, 'LOCAL'));
 
 for (const section of SECTIONS) {
   test.describe(section, () => {
